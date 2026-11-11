@@ -1,0 +1,11 @@
+{
+  "name": "pytutor-monorepo",
+  "private": true,
+  "description": "仓库根入口：前端依赖以 frontend/package.json 为唯一来源，这里不再重复声明依赖。",
+  "scripts": {
+    "install:frontend": "npm --prefix frontend install",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "vercel-build": "npm --prefix frontend run build"
+  }
+}

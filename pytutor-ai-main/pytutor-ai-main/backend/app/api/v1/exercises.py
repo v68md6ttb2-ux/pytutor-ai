@@ -1,0 +1,522 @@
+"""
+练习 API
+========
+
+接口：
+    POST   /api/v1/exercises/generate - AI 生成练习
+    GET    /api/v1/exercises          - 练习列表
+    GET    /api/v1/exercises/{id}     - 练习详情
+    POST   /api/v1/exercises/{id}/submit - 提交答案（执行测试用例）
+"""
+
+import json
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database.session import get_db
+from app.models.exercise import Exercise
+from app.models.user import User, UserRole
+from app.schemas.exercise import (
+    ExerciseGenerateRequest,
+    ExerciseHintRequest,
+    ExerciseResponse,
+    SubmitExerciseRequest,
+)
+from app.security.dependencies import get_current_user
+from app.services.exercise_service import generate_exercises, get_exercise, list_exercises
+
+router = APIRouter()
+
+# 学生查看参考答案的门槛：至少通过 1 次，或累计尝试达到这个次数
+SOLUTION_ATTEMPT_THRESHOLD = 3
+
+# 只有这些事件才算"尝试过这道题"。hint_requested / solution_viewed 也带
+# exercise_id，若不排除，反复要提示就能凑够次数骗开答案。
+ATTEMPT_EVENT_TYPES = frozenset({"exercise_passed", "exercise_failed", "exercise_retry"})
+
+
+def _event_score(detail_json: str | None) -> int:
+    """从 LearningEvent.detail_json 里取出 score_pct（读不出来按 0 处理）。"""
+
+    if not detail_json:
+        return 0
+    try:
+        return int(json.loads(detail_json).get("score_pct") or 0)
+    except (ValueError, TypeError, AttributeError):
+        return 0
+
+
+def solution_denial_reason(
+    role: UserRole,
+    event_types: list[str],
+) -> str | None:
+    """
+    判断学生是否有资格查看参考答案。
+
+    为什么要有这道闸：参考答案一旦随手可取，练习就退化成抄写。
+    只有"已经做出来"或"确实卡住试过若干次"的学生才放行。
+
+    返回 None 表示允许，返回字符串表示应当拒绝（字符串即拒绝原因）。
+    """
+    if role in (UserRole.INSTRUCTOR, UserRole.ADMIN):
+        return None
+
+    attempts = sum(1 for e in event_types if e in ATTEMPT_EVENT_TYPES)
+    passed = sum(1 for e in event_types if e == "exercise_passed")
+    if passed == 0 and attempts < SOLUTION_ATTEMPT_THRESHOLD:
+        return f"需先通过该练习或累计尝试 {SOLUTION_ATTEMPT_THRESHOLD} 次（当前 {attempts} 次）"
+    return None
+
+
+@router.get("", response_model=list[ExerciseResponse])
+async def list_exercise_list(
+    difficulty: int | None = Query(default=None, ge=1, le=5),
+    concepts: str | None = Query(default=None),
+    limit: int = Query(default=20, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取练习题列表（可按难度和知识点筛选）。"""
+    return await list_exercises(db, difficulty=difficulty, concepts=concepts, limit=limit, offset=offset)
+
+
+@router.post("/generate")
+async def generate_exercise_list(
+    request: ExerciseGenerateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """AI 生成个性化练习题。"""
+    exercises = await generate_exercises(db, request)
+    return {"exercises": exercises, "count": len(exercises)}
+
+
+@router.post("/{exercise_id}/hint")
+async def get_exercise_hint(
+    exercise_id: str,
+    body: ExerciseHintRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取分层提示。hint_level: 1-5（前端累积请求递增）。"""
+    from sqlalchemy import select
+    from app.schemas.ai import ChatMessage as LLMMessage
+    from app.services.llm_service import chat_completion
+
+    r = await db.execute(select(Exercise).where(Exercise.id == exercise_id))
+    exercise = r.scalar_one_or_none()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="练习不存在")
+
+    level = body.hint_level
+    user_code = body.code
+    failed_info = body.failed_info
+
+    # 2.0: 误区诊断 + 教学策略 → 渐进式提示
+    misconception = None
+    try:
+        from app.services.misconception_service import diagnose as mc_diagnose
+        stderr_info = failed_info if failed_info else ""
+        mc_result = await mc_diagnose(db, code=user_code, stderr=stderr_info)
+        if mc_result.get("has_misconception"):
+            misconception = mc_result
+    except Exception:
+        pass
+
+    # 根据误区和尝试次数确定提示等级
+    effective_level = level
+    strategy_name = "progressive_hint"
+    mc_name = misconception["misconception_name"] if misconception else None
+
+    if misconception and level <= 2:
+        # 首次误区 → 概念提示 + 反例
+        strategy_name = "counterexample" if level == 1 else "concept_explanation"
+        effective_level = 1 if level == 1 else 2
+    elif level >= 5:
+        effective_level = 5
+        strategy_name = "summary_reflection"
+
+    hint_prompts = {
+        1: f"学生正在做：{exercise.title}。诊断出误区：{mc_name or '未知'}。请给 Level 1 概念提示——只解释相关概念，不涉及代码位置，不直接给答案。2-3 句中文。",
+        2: f"学生正在做：{exercise.title}。误区：{mc_name or '未知'}。请给 Level 2 方向提示——给出解决方向，用问题引导学生思考，不指出具体行。2-3 句中文。",
+        3: f"学生正在做：{exercise.title}。误区：{mc_name or '未知'}。学生代码：\n```python\n{user_code[:300]}\n```\n请给 Level 3 位置提示——指出可疑代码区域，但不给正确代码。2-3 句中文。",
+        4: f"学生正在做：{exercise.title}。误区：{mc_name or '未知'}。学生代码：\n```python\n{user_code[:400]}\n```\n请给 Level 4 部分代码——给出关键片段，但保留部分让学生完成。",
+        5: f"学生正在做：{exercise.title}。完整题目：{exercise.description[:400]}\n请给 Level 5 完整参考答案，附带逐行解释。",
+    }
+
+    prompt = hint_prompts.get(min(effective_level, 5), hint_prompts[2])
+    max_tokens = 200 if effective_level <= 2 else 400
+
+    try:
+        llm_resp = await chat_completion(
+            messages=[LLMMessage(role="user", content=prompt)],
+            temperature=0.5, max_tokens=max_tokens,
+        )
+        # 服务端记账：提示次数必须由后端数，不能听前端自报——
+        # 否则学生只要在提交时传 used_hints=0 就能拿满分。
+        from app.services.profile_service import record_event
+        try:
+            await record_event(
+                db, current_user.id, "hint_requested",
+                concept=(exercise.concepts.split(",")[0] if exercise.concepts else exercise.title),
+                detail={
+                    "exercise_id": exercise.id,
+                    "hint_level": effective_level,
+                    "strategy": strategy_name,
+                },
+            )
+        except Exception as e:
+            from app.observability.logger import get_logger
+            get_logger(__name__).warning("hint_event_record_failed", error=str(e)[:200])
+        return {
+            "hint": llm_resp.content.strip(),
+            "hint_level": effective_level,
+            "misconception_id": misconception["misconception_id"] if misconception else None,
+            "misconception_name": mc_name,
+            "strategy": strategy_name,
+        }
+    except Exception as e:
+        from app.observability.logger import get_logger
+        get_logger(__name__).warning("hint_generation_failed", error=str(e)[:200])
+        return {"hint": "提示生成暂时失败，请稍后重试", "hint_level": effective_level}
+
+
+@router.get("/{exercise_id}/solution")
+async def get_exercise_solution(
+    exercise_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取参考答案：教师/管理员可直接查看；学生需已通过或累计尝试 ≥3 次。"""
+    from sqlalchemy import select
+    from app.models.profile import LearningEvent
+
+    r = await db.execute(select(Exercise).where(Exercise.id == exercise_id))
+    exercise = r.scalar_one_or_none()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="练习不存在")
+
+    if current_user.role not in (UserRole.INSTRUCTOR, UserRole.ADMIN):
+        events = (await db.execute(
+            select(LearningEvent.event_type).where(
+                LearningEvent.user_id == current_user.id,
+                LearningEvent.detail_json.like(f'%"{exercise_id}"%'),
+            )
+        )).scalars().all()
+        reason = solution_denial_reason(current_user.role, events)
+        if reason:
+            raise HTTPException(status_code=403, detail=reason)
+
+    # 服务端记账：只要答案真的发到了学生面前，这次完成就不能算"独立完成"。
+    if current_user.role not in (UserRole.INSTRUCTOR, UserRole.ADMIN):
+        from app.services.profile_service import record_event
+        try:
+            await record_event(
+                db, current_user.id, "solution_viewed",
+                concept=(exercise.concepts.split(",")[0] if exercise.concepts else exercise.title),
+                detail={"exercise_id": exercise.id},
+            )
+        except Exception as e:
+            from app.observability.logger import get_logger
+            get_logger(__name__).warning("solution_event_record_failed", error=str(e)[:200])
+
+    return {"solution": exercise.reference_solution or "暂无参考答案"}
+
+
+@router.get("/{exercise_id}")
+async def get_exercise_detail(
+    exercise_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取练习详情。教师可见参考答案。"""
+    is_teacher = current_user.role in (UserRole.INSTRUCTOR, UserRole.ADMIN)
+    exercise = await get_exercise(db, exercise_id, include_solution=is_teacher)
+    if not exercise:
+        raise HTTPException(status_code=404, detail="练习不存在")
+    return exercise
+
+
+@router.post("/{exercise_id}/submit")
+async def submit_exercise_answer(
+    exercise_id: str,
+    body: SubmitExerciseRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    提交练习答案，自动运行测试用例。
+
+    请求体：{"code": "学生的 Python 代码"}
+    返回：测试用例通过情况 + 执行结果
+    """
+    from sqlalchemy.orm import selectinload
+    from sqlalchemy import select
+
+    # 获取练习和测试用例
+    result = await db.execute(
+        select(Exercise)
+        .where(Exercise.id == exercise_id)
+        .options(selectinload(Exercise.test_cases))
+    )
+    exercise = result.scalar_one_or_none()
+    if not exercise:
+        raise HTTPException(status_code=404, detail="练习不存在")
+
+    user_code = body.code
+
+    # ACM 模式：每个测试用例独立执行，stdin 传入 input_data
+    from app.sandbox.runner import execute_student_code as _execute
+
+    test_results = []
+    passed = 0
+    total = 0
+    total_time = 0.0
+    any_error = None
+    sandbox_unavailable = False
+
+    for tc in sorted(exercise.test_cases, key=lambda t: t.order_index):
+        total += 1
+        exec_result = await _execute(user_code, stdin_input=tc.input_data or "")
+        total_time += exec_result.get("runtime_ms", 0)
+
+        if exec_result["status"] == "unavailable":
+            # 沙箱没起来 ≠ 学生写错了。整份提交直接终止，不落任何通过记录。
+            test_results.append({
+                "description": tc.description, "passed": False,
+                "is_hidden": tc.is_hidden, "error": "执行环境不可用",
+            })
+            any_error = exec_result["stderr"]
+            sandbox_unavailable = True
+            break
+        if exec_result["status"] == "blocked":
+            test_results.append({"description": tc.description, "passed": False, "is_hidden": tc.is_hidden, "error": f"安全拦截: {exec_result['stderr']}"})
+            any_error = exec_result["stderr"]
+            continue
+        if exec_result["status"] == "timeout":
+            test_results.append({"description": tc.description, "passed": False, "is_hidden": tc.is_hidden, "error": "超时"})
+            any_error = "超时"
+            continue
+        if exec_result["status"] == "error" and exec_result["stderr"]:
+            test_results.append({"description": tc.description, "passed": False, "is_hidden": tc.is_hidden, "error": exec_result["stderr"][:200]})
+            any_error = exec_result["stderr"]
+            continue
+
+        user_output = exec_result["stdout"].rstrip()
+        expected = (tc.expected_output or "").rstrip()
+        if user_output == expected:
+            passed += 1
+            test_results.append({"description": tc.description, "passed": True, "is_hidden": tc.is_hidden})
+        else:
+            test_results.append({"description": tc.description, "passed": False, "is_hidden": tc.is_hidden,
+                "expected": expected if not tc.is_hidden else "(隐藏)",
+                "got": user_output[:200] if not tc.is_hidden else "(隐藏)"})
+
+    if sandbox_unavailable:
+        # 沙箱没起来不是学生的问题：不记失败、不动画像、不算尝试次数。
+        return {
+            "exercise_id": exercise_id,
+            "execution": {"status": "unavailable", "stderr": any_error or "", "runtime_ms": 0},
+            "test_results": {"passed": 0, "total": total, "details": test_results, "all_passed": False},
+            "help_available": False,
+            "sandbox_unavailable": True,
+            "score_pct": 0,
+            "score_label": "⚠️ 执行服务不可用，未判定",
+            "exp_gained": 0,
+            "difficulty": exercise.difficulty,
+            "misconception": None,
+            "error_class": None,
+            "beyond_misconceptions": False,
+        }
+
+    exercise.use_count = (exercise.use_count or 0) + 1
+
+    # 2.0: 误区诊断（未全部通过时触发）
+    # SRS 3.2 接线（E-FR-02）：第 1 层错误大类。M 命中与否都归类，
+    # 保证「M 之外的错误不再隐形」——权重/画像坐在完整层上。
+    misconception_diagnosis = None
+    error_class = None
+    if not (passed == total and total > 0):
+        try:
+            from app.analysis.error_class import classify_error
+            if any_error == "超时":
+                # 超时/被杀：无 stderr 但确实没跑完
+                error_class = classify_error("", ran_ok=False, output_correct=None)
+            else:
+                # 崩溃 → 按异常类型归类；跑通但输出不对 → logic
+                error_class = classify_error(any_error or "", ran_ok=True, output_correct=False)
+        except Exception:
+            pass
+        try:
+            from app.services.misconception_service import diagnose as mc_diagnose
+            stderr_summary = "; ".join([
+                t.get("error", "") for t in test_results if not t.get("passed")
+            ])[:500]
+            mc_result = await mc_diagnose(
+                db, code=user_code, stderr=stderr_summary,
+                exercise_context=exercise.description or ""
+            )
+            if mc_result.get("has_misconception"):
+                misconception_diagnosis = mc_result
+        except Exception:
+            pass
+
+    # 联动学习画像：记录事件 + 更新薄弱点 + 独立完成度评分
+    from app.services.profile_service import record_event, update_weakness, get_or_create_profile
+    from app.models.profile import LearningEvent
+    from sqlalchemy import select
+
+    all_passed = passed == total and total > 0
+
+    # 独立完成度评分：提示次数/是否看过答案一律以后端事件为准。
+    event_rows = (await db.execute(
+        select(LearningEvent.event_type, LearningEvent.detail_json)
+        .where(
+            LearningEvent.user_id == current_user.id,
+            LearningEvent.detail_json.like(f'%"{exercise.id}"%'),
+        )
+    )).all()
+
+    # 提示次数：这道题一共要过几次提示，累计计算——试得越多、要得越多，分越低
+    server_hints = sum(1 for etype, _ in event_rows if etype == "hint_requested")
+
+    # 看答案：判断"本次提交之前有没有看过"，不能靠事件时间排序——
+    # SQLite 的 CURRENT_TIMESTAMP 只有秒级精度，同一秒内的 hint/view/提交
+    # 顺序是不可靠的，UUID 主键也没有时间含义。
+    # 改用累计计数：每次提交把"当时看过答案的总次数"存进 detail，
+    # 下次提交时若当前次数更大，就说明中间看过答案。
+    solution_views_total = sum(1 for etype, _ in event_rows if etype == "solution_viewed")
+    previous_views_baseline = 0
+    for etype, detail_json in event_rows:
+        if etype in ATTEMPT_EVENT_TYPES:
+            try:
+                stored = int(json.loads(detail_json or "{}").get("solution_views_total") or 0)
+            except (ValueError, TypeError):
+                stored = 0
+            previous_views_baseline = max(previous_views_baseline, stored)
+    viewed_in_this_attempt = solution_views_total > previous_views_baseline
+
+    # 只认服务端事件。之前用 max(server_hints, 前端值) 并把前端的
+    # viewed_solution=True 直接采信，前端一个粘住的 showSolution 就能把
+    # 真做对的提交判成 0 分。
+    used_hints = server_hints
+    viewed_solution = viewed_in_this_attempt
+
+    if all_passed:
+        if viewed_solution:
+            score_pct = 0    # 看了答案 → 不算通过
+        elif used_hints >= 2:
+            score_pct = 50   # 用了 2 次提示 → 50%
+        elif used_hints == 1:
+            score_pct = 75   # 用了 1 次提示 → 75%
+        else:
+            score_pct = 100  # 完全独立 → 100%
+    else:
+        score_pct = 0        # 未通过 → 0%
+        # 未通过时仍记录尝试次数
+
+    # "已经通过过"只统计计分通过（score_pct > 0）：
+    # 看答案做出来的提交会记一条 exercise_passed 事件，但从来没真正独立完成；
+    # 若把它算进来，学生之后再独立做对时 already_passed > 0，奖励和
+    # exercise_passed 事件都永远不会再发——被一次看答案永久锁死。
+    prior_pass_events = (await db.execute(
+        select(LearningEvent.detail_json)
+        .where(LearningEvent.user_id == current_user.id,
+               LearningEvent.event_type == "exercise_passed",
+               LearningEvent.detail_json.like(f'%"{exercise.id}"%'))
+    )).scalars().all()
+    already_passed = sum(1 for d in prior_pass_events if _event_score(d) > 0)
+
+    counted_pass = all_passed and score_pct > 0
+    first_counted_pass = counted_pass and already_passed == 0
+
+    if first_counted_pass:
+        event_type = "exercise_passed"
+    elif not all_passed:
+        event_type = "exercise_failed"
+    else:
+        # 全对但没计分（看过答案），或已经通过过：只算一次重试，不写通过事件
+        event_type = "exercise_retry"
+
+    await record_event(db, current_user.id, event_type,
+        concept=(exercise.concepts.split(",")[0] if exercise.concepts else exercise.title),
+        detail={
+            "title": exercise.title,
+            "exercise_id": exercise.id,
+            "score_pct": score_pct,
+            "used_hints": used_hints,
+            "viewed_solution": viewed_solution,
+            # 下一次提交据此判断"这之间有没有又去看答案"
+            "solution_views_total": solution_views_total,
+            # E-FR-02：第 1 层错误大类进画像事件（失败时非空）
+            "error_class": error_class,
+        })
+    profile = await get_or_create_profile(db, current_user.id)
+
+    # 只有"首次计分通过"才发奖励。重复提交同一道已通过的题不能刷经验、
+    # 刷掌握度，否则把提交按钮点十次就能升级。
+    rewarded = first_counted_pass
+    exp_gained = round(exercise.difficulty * score_pct) if rewarded else 0
+
+    # record_event() 已经更新了 total_exercises_completed/passed/hints_used，
+    # 这里只更新 experience 和 concept_mastery，避免双重计数
+
+    # 累积经验 + 升级（每 300 经验升一级，最低 Lv1）
+    mastery = {}
+    if profile.concept_mastery_json:
+        try: mastery = json.loads(profile.concept_mastery_json)
+        except Exception: pass
+    # 更新经验值
+    total_exp = mastery.get("_total_exp", 0) + exp_gained
+    mastery["_total_exp"] = total_exp
+    profile.level = max(1, total_exp // 300 + 1)
+    # 更新知识点掌握度（通过练习的知识点 +score_pct/100）
+    if rewarded and exercise.concepts:
+        for c in exercise.concepts.split(","):
+            c = c.strip()
+            old = mastery.get(c, 0)
+            mastery[c] = min(1.0, old + score_pct / 200)  # 每次最多加 0.5
+    profile.concept_mastery_json = json.dumps(mastery, ensure_ascii=False)
+
+    # 更新薄弱点状态：失败 → 记录/加重；通过 → 把对应弱项标记为已解决
+    if exercise.concepts:
+        for concept in exercise.concepts.split(","):
+            # 只有计分通过才算"掌握了这个知识点"；看答案凑出的全对不算
+            await update_weakness(
+                db, current_user.id, concept.strip(), is_success=counted_pass
+            )
+
+    await db.commit()
+    avg_time = round(total_time / total, 2) if total > 0 else 0
+
+    return {
+        "exercise_id": exercise_id,
+        "execution": {
+            "status": "unavailable" if sandbox_unavailable else ("completed" if any_error is None else "error"),
+            "stderr": any_error or "",
+            "runtime_ms": avg_time,
+        },
+        "test_results": {"passed": passed, "total": total, "details": test_results, "all_passed": passed == total and total > 0},
+        # 附上错因分析和提示（前端可据此展示帮助按钮）
+        "help_available": passed < total,
+        # 沙箱不可用时这次提交没有意义：前端必须提示"服务异常"，
+        # 而不是显示成"你答错了"
+        "sandbox_unavailable": sandbox_unavailable,
+        "score_pct": score_pct,
+        "score_label": "⚠️ 执行服务不可用，未判定" if sandbox_unavailable else
+                       "📖 参考答案辅助（不计分）" if (all_passed and viewed_solution) else
+                       "✅ 已通过（重复提交不再计分）" if (already_passed > 0 and all_passed) else
+                       "⭐ 完全独立完成！" if score_pct == 100 else
+                       "🌟 提示帮助完成" if score_pct >= 50 else
+                       "❌ 未通过" if not all_passed else "",
+        "exp_gained": exp_gained,
+        "difficulty": exercise.difficulty,
+        # 2.0: 误区诊断结果
+        "misconception": misconception_diagnosis,
+        # SRS 3.2 E-FR-02：第 1 层错误大类。beyond_misconceptions=True 表示
+        # 有错误但一个 M 都没命中——这正是过去隐形、现在可见的情形。
+        "error_class": error_class,
+        "beyond_misconceptions": bool(error_class) and misconception_diagnosis is None,
+    }

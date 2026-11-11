@@ -1,0 +1,249 @@
+"""
+AI 导师服务（简化为纯文本回复）
+================================
+
+不再强制 LLM 输出 JSON——改为自然的 Markdown 文本。
+DeepSeek 对纯文本回复非常稳定，JSON 输出不稳定。
+
+格式约定：
+    AI 回复的首行可选标记：<!-- hint:1 concepts:for_loop,list -->
+    前端从首行注释提取元数据，其余为 Markdown 内容。
+    如果没有注释行，默认为 general + Level 1。
+"""
+
+import re
+
+from app.core.config import settings
+from app.observability.logger import get_logger
+from app.schemas.ai import ChatMessage as LLMMessage
+from app.schemas.chat import AIResponse
+from app.services.llm_service import chat_completion
+
+logger = get_logger(__name__)
+
+SYSTEM_PROMPT = """你是 PyTutor，一位耐心、会共情的 Python 编程导师。你的学生是初学者，他们不是不会编程，而是有一些概念还没想通。
+
+【你的教学风格】
+- 先说一句共情的话："这个问题很多初学者都会遇到"
+- 用生活比喻解释概念（比如把变量比作贴了标签的盒子）
+- 每次只讲一个核心点，不堆砌术语
+- 如果学生做对了，先肯定再追问："很好！那如果换成...会怎样？"
+- 如果学生做错了，说"这个错误其实是个很好的学习线索"而不是"你错了"
+
+【你绝不能做的事】
+- 不要一上来就给完整代码（除非学生明确说"请给我完整代码"）
+- 不要用"你错了""不对"这种否定性语言
+- 不要一次解释超过 2 个概念
+- 不要写超过 15 行的代码示例
+
+【你的回复结构】
+1. 先说一句肯定/共情的话（1句）
+2. 核心解释或提示（2-4句，按提示等级控制详略）
+3. 必要时给生活类比
+4. 一个小问题引导学生思考下一步
+
+【代码示例要求】
+- 用 ```python 包裹
+- 首次只能给 Level 1-2（概念/方向提示），不给代码
+- 只有 Level 4+ 才给关键代码片段
+- 每段代码不超过 8 行
+
+【首行格式】
+回复第一行必须写：<!-- hint:N concepts:x,y -->
+（N=1~5 提示等级，x,y=关联的知识点标签）"""
+
+
+def calculate_hint_level(history: list[dict], question: str) -> int:
+    """根据对话历史计算提示等级 1-5。"""
+    question_lower = question.lower()
+    if any(kw in question for kw in ["直接给答案", "给我完整代码", "帮我写"]):
+        return 3
+    if any(kw in question_lower for kw in ["什么是", "为什么", "怎么理解", "解释"]):
+        return 1
+    if "```" in question:
+        return 2
+    recent_hints = [m.get("hint_level", 0) for m in history[-6:] if m.get("role") == "assistant"]
+    if len(recent_hints) >= 3 and sum(recent_hints[-3:]) / 3 >= 3:
+        return min(4, int(sum(recent_hints[-3:]) / 3))
+    return 1
+
+
+async def _llm_chat(messages: list[LLMMessage], temperature: float, model: str | None = None):
+    """C 方向 Task 6：根据开关在单模型与多模型路由之间切换。
+
+    开 → chat_completion_routed()（简单走 deepseek-chat、复杂走 deepseek-v4-pro）
+    关 → 原单模型 chat_completion()（行为不变）
+    """
+    if settings.ENABLE_MULTI_MODEL_ROUTING:
+        from app.services.llm_service import chat_completion_routed
+        return await chat_completion_routed(messages=messages, temperature=temperature)
+    return await chat_completion(messages=messages, temperature=temperature, model=model)
+
+
+async def generate_tutor_response(
+    user_message: str,
+    conversation_history: list[dict],
+    student_level: str = "beginner",
+    rag_context: str | None = None,
+    model: str | None = None,
+    misconception_id: str | None = None,
+) -> AIResponse:
+    """生成 AI 导师回复（纯文本 Markdown）。"""
+    hint_level = calculate_hint_level(conversation_history, user_message)
+
+    messages: list[LLMMessage] = [LLMMessage(role="system", content=SYSTEM_PROMPT)]
+
+    if rag_context:
+        messages.append(LLMMessage(role="system", content=f"参考知识点：\n{rag_context}"))
+
+    messages.append(LLMMessage(role="system",
+        content=f"学生水平: {student_level}。本次回复提示等级应为 Level {hint_level}。"
+                f"第一行写 <!-- hint:{hint_level} concepts:xxx --> 然后写正文。"))
+
+    for msg in conversation_history[-20:]:
+        messages.append(LLMMessage(role=msg.get("role", "user"), content=msg.get("content", "")))
+
+    messages.append(LLMMessage(role="user", content=user_message))
+
+    try:
+        llm_response = await _llm_chat(messages, 0.7, model)
+        raw = llm_response.content.strip()
+
+        # 解析首行元数据标记
+        hint = hint_level
+        concepts: list[str] = []
+        response_type = "general"
+
+        meta_match = re.match(r'<!--\s*hint:(\d+)\s*(?:concepts:(.+?))?\s*-->', raw)
+        if meta_match:
+            hint = int(meta_match.group(1))
+            if meta_match.group(2):
+                concepts = [c.strip() for c in meta_match.group(2).split(",") if c.strip()]
+            raw = raw[meta_match.end():].strip()
+
+        # 推断 response_type
+        if "```python" in user_message or "```" in user_message:
+            response_type = "code_feedback"
+        elif any(kw in user_message for kw in ["什么是", "解释", "为什么"]):
+            response_type = "concept_explanation"
+        elif any(kw in user_message for kw in ["练习", "题目"]):
+            response_type = "exercise"
+
+        # 2.0: 回复质量自检。传入真实误区与本次提示等级，
+        # 否则评委只能按通用标准打分，"是否针对该误区"这一维无从判断。
+        verify_score = 0
+        try:
+            from app.services.pedagogy_service import verify_response
+            verification = await verify_response(raw, hint, misconception_id)
+            verify_score = verification.get("score", 0) or 0
+            if verification.get("needs_revision") and verify_score < 3:
+                # 不合格 → 重新生成（更严格的提示），只重试一次以限制成本
+                logger.info("tutor_response_revision", score=verify_score)
+                messages.append(LLMMessage(role="system",
+                    content="上一轮回复不合格。请确保：1) 不给完整答案 2) 符合提示等级 3) 用初学者能理解的语言。重新回复。"))
+                llm_response2 = await _llm_chat(messages, 0.5, model)
+                raw = llm_response2.content.strip()
+                # 再次解析元数据
+                meta_match2 = re.match(r'<!--\s*hint:(\d+)\s*(?:concepts:(.+?))?\s*-->', raw)
+                if meta_match2:
+                    hint = int(meta_match2.group(1))
+                    if meta_match2.group(2):
+                        concepts = [c.strip() for c in meta_match2.group(2).split(",") if c.strip()]
+                    raw = raw[meta_match2.end():].strip()
+
+                # 修订后的分数必须来自对修订稿的实际审核；
+                # 审核再次失败就留空（未复核），不能塞一个固定值冒充分数。
+                try:
+                    reverify = await verify_response(raw, hint, misconception_id)
+                    verify_score = int(reverify.get("score", 0) or 0)
+                except Exception:
+                    verify_score = 0
+        except Exception:
+            verify_score = 0
+
+        logger.info("tutor_response_ok", hint=hint, type=response_type, length=len(raw), verify_score=verify_score)
+
+        return AIResponse(
+            response_type=response_type,
+            message=raw,
+            hint_level=hint,
+            related_concepts=concepts,
+            next_action="ask_question",
+            verify_score=verify_score if verify_score > 0 else None,
+        )
+
+    except Exception as e:
+        logger.error("tutor_failed", error=str(e))
+        return AIResponse(
+            response_type="general",
+            message=f"抱歉，回复生成失败。请稍后重试。\n\n错误信息：{str(e)[:200]}",
+            hint_level=1,
+            related_concepts=[],
+            next_action="ask_question",
+        )
+
+
+async def generate_tutor_response_stream(
+    user_message: str,
+    conversation_history: list[dict],
+    student_level: str = "beginner",
+    rag_context: str | None = None,
+    model: str | None = None,
+):
+    """流式生成 AI 导师回复——逐 token yield"""
+    import litellm
+    from app.core.config import settings as s
+
+    hint_level = calculate_hint_level(conversation_history, user_message)
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    if rag_context:
+        messages.append({"role": "system", "content": f"参考知识点：\n{rag_context}"})
+    messages.append({"role": "system", "content": f"提示等级 Level {hint_level}。第一行写 <!-- hint:{hint_level} concepts:xxx -->"})
+
+    for msg in conversation_history[-20:]:
+        messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+    messages.append({"role": "user", "content": user_message})
+
+    provider_cfg = {"model": f"deepseek/{s.deepseek_model}", "api_key": s.deepseek_api_key, "api_base": s.deepseek_base_url}
+    litellm_model = model or provider_cfg["model"]
+    if s.ENABLE_MULTI_MODEL_ROUTING:
+        # C 方向 Task 6：流式也走多模型路由
+        from app.services.llm_service import classify_question_complexity
+        litellm_model = f"deepseek/{classify_question_complexity(user_message)['routed_model']}"
+
+    try:
+        response = await litellm.acompletion(
+            model=litellm_model, messages=messages,
+            temperature=s.llm_temperature, max_tokens=s.llm_max_tokens,
+            api_key=provider_cfg["api_key"], api_base=provider_cfg["api_base"],
+            stream=True, timeout=s.llm_timeout,
+        )
+        async for chunk in response:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+    except Exception as e:
+        logger.error("stream_failed", error=str(e))
+        yield f"\n[流式中断: {str(e)[:100]}]"
+
+
+def _parse_ai_json(raw_content: str, default_hint_level: int) -> AIResponse:
+    """保留兼容旧版 JSON 解析。"""
+    import json
+    content = raw_content.strip()
+    code_match = re.search(r'```(?:json)?\s*\n?(.*?)\n?```', content, re.DOTALL)
+    if code_match:
+        content = code_match.group(1).strip()
+    if not content.startswith("{"):
+        first, last = content.find("{"), content.rfind("}")
+        if first != -1 and last > first:
+            content = content[first:last + 1]
+    data = json.loads(content)
+    return AIResponse(
+        response_type=data.get("response_type", "general"),
+        message=data.get("message", "无内容"),
+        hint_level=data.get("hint_level", default_hint_level),
+        related_concepts=data.get("related_concepts", []),
+        next_action=data.get("next_action", "ask_question"),
+        code_blocks=data.get("code_blocks", []),
+    )

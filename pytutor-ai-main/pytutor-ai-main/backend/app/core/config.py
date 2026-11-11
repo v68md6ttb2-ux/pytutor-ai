@@ -1,0 +1,350 @@
+"""
+应用配置模块
+============
+
+使用 pydantic-settings 从 .env 文件和环境变量中加载配置。
+
+原理说明：
+---------
+pydantic-settings 是 pydantic 的扩展，专门用于管理应用配置。
+它会按照以下优先级读取配置（后面的覆盖前面的）：
+1. 代码中定义的默认值
+2. .env 文件中的值
+3. 操作系统环境变量中的值
+
+这样做的好处：
+- 开发和测试时用 .env 文件，方便本地调试
+- 生产部署时用 K8s ConfigMap/Secret 注入环境变量
+- 敏感信息（密码、Key）永远不写进代码
+"""
+
+from pathlib import Path
+from typing import Optional
+
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# 项目根目录的绝对路径（backend/ 目录）
+# Path(__file__).resolve() 获取当前文件的绝对路径
+# .parent.parent 向上两级：config.py -> core -> app -> backend/
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+class Settings(BaseSettings):
+    """
+    应用配置类
+
+    每个属性对应一个配置项。pydantic-settings 会自动从 .env 文件和
+    环境变量中查找同名（不区分大小写）的值。
+
+    例如：
+    - 属性 app_name 会匹配 .env 中的 APP_NAME
+    - 属性 deepseek_api_key 会匹配 .env 中的 DEEPSEEK_API_KEY
+    """
+
+    # ==============================
+    # 应用基础配置
+    # ==============================
+    app_name: str = Field(
+        default="AI Python Tutor",
+        description="应用名称，用于 Swagger 文档标题和日志标识"
+    )
+    app_env: str = Field(
+        default="development",
+        description="运行环境：development | testing | staging | production"
+    )
+    debug: bool = Field(
+        default=True,
+        description="调试模式：True 时显示详细错误信息，生产环境必须设为 False"
+    )
+    secret_key: str = Field(
+        default="change-me-to-a-random-string",
+        description="JWT 签名密钥。生产环境必须使用强随机字符串！"
+    )
+
+    # ==============================
+    # 服务器配置
+    # ==============================
+    host: str = Field(
+        default="0.0.0.0",
+        description="服务器监听地址。0.0.0.0 表示接受所有网络接口的连接"
+    )
+    port: int = Field(
+        default=8000,
+        description="服务器监听端口"
+    )
+
+    # ==============================
+    # CORS 配置（跨域资源共享）
+    # ==============================
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000",
+        description="允许访问后端的前端地址列表，逗号分隔"
+    )
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """将逗号分隔的字符串转为 Python 列表，方便 FastAPI 使用"""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    # ==============================
+    # 学生代码执行边界
+    # ==============================
+    sandbox_mode: str = Field(
+        default="auto",
+        description=(
+            "学生代码执行方式：auto（有 Docker 用 Docker，无则子进程）| "
+            "docker（强制容器）| subprocess（仅开发）"
+        ),
+    )
+    sandbox_require_isolation: bool = Field(
+        default=False,
+        description=(
+            "True 时没有可用 Docker 就拒绝执行学生代码，绝不退回宿主进程。"
+            "生产环境（APP_ENV=production）会强制视为 True。"
+        ),
+    )
+
+    @property
+    def isolation_required(self) -> bool:
+        """是否禁止退回到宿主进程执行。"""
+        return self.sandbox_require_isolation or self.app_env.lower() == "production"
+
+    # ==============================
+    # 数据库配置
+    # ==============================
+    database_url: str = Field(
+        default="sqlite+aiosqlite:///./ai_tutor.db",
+        description=(
+            "数据库连接 URL。\n"
+            "开发环境：sqlite+aiosqlite:///./ai_tutor.db（文件存储，无需安装数据库）\n"
+            "生产环境：postgresql+asyncpg://user:password@host:5432/dbname"
+        )
+    )
+
+    @property
+    def is_sqlite(self) -> bool:
+        """判断当前是否使用 SQLite 数据库（开发环境）"""
+        return self.database_url.startswith("sqlite")
+
+    # ==============================
+    # DeepSeek AI 配置
+    # ==============================
+    deepseek_api_key: str = Field(
+        default="sk-placeholder",
+        description="DeepSeek API Key，从 https://platform.deepseek.com 获取"
+    )
+    deepseek_base_url: str = Field(
+        default="https://api.deepseek.com",
+        description="DeepSeek API 地址（OpenAI 兼容接口）"
+    )
+    deepseek_model: str = Field(
+        default="deepseek-chat",
+        description="默认使用的 DeepSeek 模型"
+    )
+    deepseek_fallback_model: Optional[str] = Field(
+        default=None,
+        description="备用模型。主模型不可用时自动切换。"
+    )
+
+    # ==============================
+    # LLM 通用参数
+    # ==============================
+    llm_temperature: float = Field(
+        default=0.7,
+        ge=0.0,   # 大于等于 0
+        le=2.0,   # 小于等于 2
+        description="LLM 生成温度。0=确定性强（适合代码），1=创造性高（适合对话）"
+    )
+    llm_max_tokens: int = Field(
+        default=4096,
+        ge=1,
+        description="LLM 单次回复最大 token 数"
+    )
+    llm_timeout: int = Field(
+        default=60,
+        ge=1,
+        description="LLM API 调用超时时间（秒）"
+    )
+
+    # ==============================
+    # Embedding 配置（DashScope text-embedding API）
+    # ==============================
+    dashscope_api_key: str = Field(
+        default="",  # 从项目根目录 .env 加载
+        description="阿里云百炼 DashScope API Key（用于文本向量化）"
+    )
+    embedding_model: str = Field(
+        default="text-embedding-v3",
+        description="Embedding 模型：text-embedding-v1 | v2 | v3"
+    )
+
+    # ==============================
+    # 日志配置
+    # ==============================
+    log_level: str = Field(
+        default="DEBUG",
+        description="日志级别：DEBUG | INFO | WARNING | ERROR。开发用 DEBUG，生产用 INFO"
+    )
+    log_format: str = Field(
+        default="console",
+        description="日志格式：console（彩色可读）| json（结构化，适合日志收集系统）"
+    )
+
+    # ==============================
+    # 限流（按客户端 IP 的滑动窗口）
+    # ==============================
+    RATE_LIMIT_ENABLED: bool = Field(
+        default=True,
+        description="启用进程内限流。多 worker/多实例部署时每人各自计数，"
+                    "生产多实例应换成 Redis 或网关限流。",
+    )
+    RATE_LIMIT_PER_MINUTE: int = Field(
+        default=120, ge=1,
+        description="普通 API 每分钟每 IP 的最大请求数。",
+    )
+    AUTH_RATE_LIMIT_PER_MINUTE: int = Field(
+        default=10, ge=1,
+        description="注册/登录每分钟每 IP 的最大请求数（防爆破）。",
+    )
+    TRUST_PROXY_HEADERS: bool = Field(
+        default=False,
+        description=(
+            "是否采信 X-Forwarded-For。默认 False：直连部署时该头可以被客户端"
+            "随便伪造，每个请求换一个假 IP 就能绕过登录限流。只有确定前面有"
+            "可信反向代理（且会覆写该头）时才设为 True。"
+        ),
+    )
+
+    # ==============================
+    # Feature Flags（算法优化开关）
+    # ==============================
+    # 三人协作（MASTER-PLAN）的算法优化开关隔离法：默认全部关，
+    # 各自独立，合 main 互不影响。逐一验证后按需转默认开。
+    # 全部可通过 .env 或环境变量覆盖（如 ENABLE_AST_DIAGNOSIS=true）。
+
+    # ---- B 方向（连哥）：AST 代码结构分析 ----
+    ENABLE_AST_DIAGNOSIS: bool = Field(
+        default=False,
+        description="B 方向：启用 AST 代码结构分析增强误区诊断（替换纯正则）。"
+                    "默认关 → 走旧正则通道。",
+    )
+
+    # ---- E 方向（SRS 3.2）：教学意图转移图 + 误区锚定 prompt ----
+    ENABLE_PEDAGOGY_STEERING: bool = Field(
+        default=False,
+        description="E 方向：教学意图转移图 + 误区锚定 prompt（灰度开关）。"
+                    "默认关 → 走旧 select_strategy。",
+    )
+
+    # ---- C 方向（clt）：质量与系统优化 ----
+    ENABLE_MULTI_JUDGE: bool = Field(
+        default=False,
+        description="C 方向 Task 1+2：Multi-Judge 3 评委评分 + Rubric V2。"
+                    "默认关 → 走旧单评委 verify_response()。需 DEEPSEEK_API_KEY。",
+    )
+    ENABLE_TIME_DECAY: bool = Field(
+        default=False,
+        description="C 方向 Task 3：画像时间衰减 + 转移矩阵。"
+                    "默认关 → 走旧简单累计。",
+    )
+    ENABLE_CONTENT_RECOMMEND: bool = Field(
+        default=False,
+        description="C 方向 Task 5：Content-Based 练习推荐。"
+                    "默认关 → 走旧线性学习路径。",
+    )
+    ENABLE_MULTI_MODEL_ROUTING: bool = Field(
+        default=False,
+        description="C 方向 Task 6：多模型路由（简单走 flash、复杂走 pro）。"
+                    "默认关 → 走单一模型。",
+    )
+
+    # ---- A 方向：RAG 检索优化 ----
+    ENABLE_RAG_RERANK: bool = Field(
+        default=False,
+        description="A 方向 A1：RAG LLM 重排序接入。默认关 → 跳过重排序。",
+    )
+    ENABLE_HYBRID_WEIGHTS: bool = Field(
+        default=False,
+        description="A 方向 A2：混合检索权重调优（向量 + TF-IDF 加权融合）。"
+                    "默认关 → 向量优先拼接去重。",
+    )
+    ENABLE_TOKEN_CHUNKING: bool = Field(
+        default=False,
+        description="A 方向 A4：按 token 窗口 + 重叠切分 chunk。"
+                    "默认关 → 按字符数切分。",
+    )
+    ENABLE_CONTEXT_COMPRESSION: bool = Field(
+        default=False,
+        description="A 方向 A6：RAG 上下文动态截断 + 压缩。"
+                    "默认关 → 全量输出检索内容。",
+    )
+
+    # ---- A 方向：RAG 调优参数 ----
+    RAG_VECTOR_WEIGHT: float = Field(
+        default=0.6,
+        ge=0.0, le=1.0,
+        description="A 方向 A2：混合检索中向量分数的权重 α（TF-IDF 权重 = 1-α）。",
+    )
+    RAG_CONTEXT_MAX_TOKENS: int = Field(
+        default=1500,
+        ge=1,
+        description="A 方向 A6：RAG 上下文注入的 token 预算上限。",
+    )
+
+    # ---- 一次性初始化接口的保护令牌 ----
+    # 为空时 /setup/* 全部关闭（默认安全）。
+    # 部署时通过环境变量设置，完成初始化后清空即可。
+    SETUP_TOKEN: str = Field(
+        default="",
+        description="部署期一次性初始化接口的共享密钥；为空则接口关闭。",
+    )
+
+    # ==============================
+    # pydantic-settings 配置
+    # ==============================
+    model_config = SettingsConfigDict(
+        # .env 文件的路径
+        env_file=".env",
+        # 如果 .env 文件不存在不报错（Docker 部署时可能只用环境变量）
+        env_file_encoding="utf-8",
+        # 不区分大小写匹配环境变量
+        case_sensitive=False,
+        # 忽略 .env 中未声明的字段（如根 .env 的 VISION_MODEL，属 vision.js 专用）
+        extra="ignore",
+        # 额外的环境变量前缀（可选，例如所有变量都以 TUTOR_ 开头）
+        # env_prefix="TUTOR_",
+    )
+
+    @model_validator(mode="after")
+    def _validate_production(self) -> "Settings":
+        """生产环境不允许带着开发默认值启动。
+
+        DEBUG=True 会把异常字符串直接吐给客户端，默认 secret_key 等于谁都能
+        伪造 JWT——这两种情况在 development 下无所谓，在 production 下必须直接
+        启动失败，而不是"跑起来再说"。
+        """
+        if self.app_env.lower() != "production":
+            return self
+
+        problems = []
+        if self.debug:
+            problems.append("DEBUG 必须设为 false")
+        if self.secret_key in ("", "change-me-to-a-random-string") or len(self.secret_key) < 32:
+            problems.append("SECRET_KEY 必须换成 ≥32 位的随机字符串")
+        if problems:
+            raise ValueError("生产环境配置不安全：" + "；".join(problems))
+        return self
+
+
+# =============================================================================
+# 全局单例
+# =============================================================================
+# 创建全局唯一的配置实例。
+# 整个应用中的所有模块都 import 这个实例，保证配置一致性。
+#
+# 注意：创建实例时会立即读取 .env 文件和环境变量，
+# 如果 .env 不存在或格式错误，这里会抛出异常。
+# =============================================================================
+settings = Settings()
