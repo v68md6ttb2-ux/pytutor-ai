@@ -1,0 +1,10 @@
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+An incorrect program can suggest a concept that a beginner has misunderstood, although the error alone rarely identifies the cause. PyTutor-AI uses such evidence to support Python tutoring. It checks eight project-selected categories through parse-error rules, AST visitors, and contextual or runtime signals. Recorded misconception history informs the feedback policy, and exercise activity updates weakness records used for later practice. Retrieved learning fragments provide context for conversational responses.
+
+We evaluated diagnosis on project-authored cases and clean-code controls, examined retrieval queries, and traced the integration in the source. With the benchmark question text, the structural analyser reproduced 47 of 47 development labels and 25 of 30 separately authored holdout labels, with no false alarms on 22 and 15 clean controls. With code and runtime text alone, it identified 24 of 30 holdout cases, compared with 13 for the native text-rule baseline. Misses concerned endpoint and print/return questions. On 30 answerable queries over 41 fragments, vector retrieval raised Hit@5 from 0.900 to 0.933 and Recall@5 from 0.407 to 0.501, while MRR fell from 0.900 to 0.890 and latency increased. A small real-model experiment found no established faithfulness benefit from injecting AST facts.
+
+These checks show how explicit diagnosis can inform traceable feedback decisions. The datasets are small and single-author, the confidence score is uncalibrated, and current interfaces supply different inputs from the offline benchmark. Classroom learning gains and recommendation effectiveness have not been measured. Further work should first improve context handling, obtain independent annotations, and assess feedback quality.
+
+\vspace{5mm}
+\noindent\textbf{Keywords:} Python programming education; misconception diagnosis; abstract syntax tree; guided feedback; retrieval-augmented generation.

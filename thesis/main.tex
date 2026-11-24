@@ -1,0 +1,108 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ---- Page layout: template requires 2 cm left/right, 2.5 cm top/bottom ----
+\usepackage[left=2cm,right=2cm,top=2.5cm,bottom=2.5cm,headheight=15pt]{geometry}
+
+% ---- Fonts: template requires Times New Roman 12 pt ----
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Consolas}[Scale=0.92]
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\setmathfont{TeX Gyre Termes Math}
+
+\usepackage{microtype}
+\usepackage{graphicx,xcolor,booktabs,tabularx,longtable,array}
+\usepackage{setspace,enumitem,listings}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+% ---- Heading sizes: 16 pt chapter, 14 pt section, 12 pt subsection ----
+\usepackage{titlesec}
+\titleformat{\chapter}[hang]{\normalfont\fontsize{16}{19}\selectfont\bfseries}{\thechapter}{0.6em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{18pt}
+\titleformat{\section}[hang]{\normalfont\fontsize{14}{17}\selectfont\bfseries}{\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{12pt}{6pt}
+\titleformat{\subsection}[hang]{\normalfont\fontsize{12}{14}\selectfont\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\definecolor{tutorteal}{HTML}{087F7A}
+\definecolor{tutorlight}{HTML}{EDF7F5}
+\definecolor{tutorink}{HTML}{20323C}
+\hypersetup{colorlinks=true,linkcolor=tutorink,citecolor=tutorteal,urlcolor=tutorteal,
+ pdftitle={PyTutor-AI: Design and Evaluation of a Misconception-Aware Python Tutoring System},
+ pdfauthor={Chen Letian, Zeng Qikai, Lian Youbo},
+ pdfsubject={Final Year Project-I Thesis, Department of Computer Science, BNBU},
+ pdfkeywords={Python programming education; misconception diagnosis; abstract syntax tree; guided feedback; retrieval-augmented generation}}
+\setstretch{1.2}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{1.3em}
+\setlength{\emergencystretch}{2em}
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{2}
+\setlist{nosep,topsep=5pt,leftmargin=*}
+\captionsetup{font=small,labelfont=bf}
+\renewcommand{\arraystretch}{1.05}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\projectcommit}{f7d0aed594a1589ff1fe24c2cb0222c149abe322}
+\lstset{basicstyle=\small\ttfamily,breaklines=true,columns=fullflexible,
+ keepspaces=true,showstringspaces=false,frame=single,rulecolor=\color{black!20},
+ backgroundcolor=\color{black!2},xleftmargin=5pt,xrightmargin=5pt,
+ keywordstyle=\color{tutorteal}\bfseries,commentstyle=\color{black!55},
+ stringstyle=\color{tutorink},captionpos=b,aboveskip=9pt,belowskip=9pt}
+\tikzset{box/.style={draw=tutorteal,rounded corners=2pt,fill=tutorlight,
+ align=center,minimum height=10mm,text width=35mm,font=\small,inner sep=5pt},
+ decision/.style={diamond,aspect=2.0,draw=tutorteal,fill=white,align=center,
+ text width=23mm,font=\small,inner sep=1pt},
+ flow/.style={-{Latex[length=2mm]},thick,draw=tutorink},
+ optional/.style={flow,dashed}}
+
+\renewcommand{\contentsname}{Table of Contents}
+\renewcommand{\bibname}{References}
+\pagestyle{plain}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\input{sections/frontmatter}
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\input{sections/abstract}
+
+\chapter*{Abbreviations}
+\addcontentsline{toc}{chapter}{Abbreviations}
+\begin{tabularx}{\textwidth}{lY}
+API & Application programming interface\\
+AST & Abstract syntax tree\\
+FPR & False-positive rate\\
+LLM & Large language model\\
+MRR & Mean reciprocal rank\\
+RAG & Retrieval-augmented generation\\
+RQ & Research question\\
+TF-IDF & Term frequency--inverse document frequency\\
+\end{tabularx}
+
+\clearpage
+\pagenumbering{arabic}
+\hypersetup{pageanchor=true}
+\input{sections/introduction}
+\input{sections/literature}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/conclusion}
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+\appendix
+\input{sections/appendices}
+\end{document}

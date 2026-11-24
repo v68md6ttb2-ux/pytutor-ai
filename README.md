@@ -32,9 +32,16 @@ PyTutor 面向 Python 零基础/初学者，提供：
 │   ├── evaluation/                    # 评测数据与脚本
 │   ├── research/                      # 研究实验
 │   └── docs/                          # 设计与部署文档
+├── thesis/                            # 毕业论文终稿、Word/LaTeX 源码与 evidence
 ├── FYP文献/                            # 毕业论文、文献综述与研究资料
 └── PyTutorFYP.pptx                    # 答辩演示文稿
 ```
+
+## 最终报告
+
+- [main.pdf](thesis/main.pdf) — LaTeX 终稿 PDF（推荐提交版）
+- [PyTutor_Final_Report.docx](thesis/PyTutor_Final_Report.docx) — Word 版
+- [thesis/](thesis/) — LaTeX/Word 源码、图表与 evidence
 
 ## 快速开始
 

@@ -1,0 +1,74 @@
+[
+  {
+    "key": "coderagent2025",
+    "source": "Local v1 PDF and arXiv page",
+    "notes": "Cited as consulted preprint",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "isnap2017",
+    "source": "Local primary PDF and CrossRef DOI",
+    "notes": "CrossRef has abbreviated title; full title from PDF",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "kele2025",
+    "source": "Local primary PDF and ACL Anthology BibTeX",
+    "notes": "Official venue and DOI checked",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "mcmining2025",
+    "source": "arXiv abstract, metadata, and primary HTML",
+    "notes": "Catalogue not claimed as direct source of project labels",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "pythonast",
+    "source": "Official Python documentation",
+    "notes": "Technical reference",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "pythonlists",
+    "source": "Official Python tutorial",
+    "notes": "List mutation and None return behaviour",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "pytutorrepo",
+    "source": "Local git and remote commit metadata",
+    "notes": "Frozen source baseline",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "rag2020",
+    "source": "arXiv metadata and abstract",
+    "notes": "General RAG framing only; no replication claim",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "socratic2024",
+    "source": "Local primary PDF and CrossRef DOI",
+    "notes": "Metadata and abstract checked",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "sorva2013",
+    "source": "CrossRef metadata and abstract",
+    "notes": "Full text not consulted; claim limited to review abstract",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "stratl2025",
+    "source": "Local v2 PDF and arXiv page",
+    "notes": "Version 2 dated March 2025; first submitted 2024",
+    "status": "identity/source checked; scope noted"
+  },
+  {
+    "key": "traver2025",
+    "source": "Local primary PDF and ACL Anthology BibTeX",
+    "notes": "Official venue and DOI checked",
+    "status": "identity/source checked; scope noted"
+  }
+]

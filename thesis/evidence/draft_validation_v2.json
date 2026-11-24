@@ -1,0 +1,17 @@
+{
+  "revision": "v2 English prose edit using humanizer",
+  "date": "2026-11-20",
+  "pages": 47,
+  "approx_pdf_words": 10280,
+  "compile": "success via bundled Tectonic",
+  "undefined_references": false,
+  "overfull_boxes": false,
+  "bibtex_warnings": false,
+  "boundary_text_outliers": [],
+  "protected_content": "all figure/table/algorithm/math blocks, citation keys and paths unchanged; bibliography byte-identical",
+  "rendered_pages": 47,
+  "visual_review": "not completed; prior required vision endpoint returned HTTP 401",
+  "ai_detector": "not run; no detector outcome promised",
+  "experiments": "not rerun for language edit; existing results retained",
+  "pdf_sha256": "f6f26441606744ffad49067a867d2e3d77a8defea915614a2e5e4ea75b8e971a"
+}

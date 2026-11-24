@@ -1,0 +1,51 @@
+{
+  "abstract.tex": {
+    "source_words_before": 284,
+    "source_words_after": 278,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  },
+  "appendices.tex": {
+    "source_words_before": 846,
+    "source_words_after": 801,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  },
+  "conclusion.tex": {
+    "source_words_before": 562,
+    "source_words_after": 508,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  },
+  "experiments.tex": {
+    "source_words_before": 3791,
+    "source_words_after": 3386,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  },
+  "introduction.tex": {
+    "source_words_before": 1149,
+    "source_words_after": 1057,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  },
+  "literature.tex": {
+    "source_words_before": 1483,
+    "source_words_after": 1167,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  },
+  "method.tex": {
+    "source_words_before": 3724,
+    "source_words_after": 3300,
+    "content_changed": true,
+    "protected_blocks_unchanged": true,
+    "citation_and_path_targets_unchanged": true
+  }
+}

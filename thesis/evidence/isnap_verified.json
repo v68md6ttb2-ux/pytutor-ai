@@ -1,0 +1,68 @@
+{
+  "title": [
+    "iSnap"
+  ],
+  "author": [
+    {
+      "given": "Thomas W.",
+      "family": "Price",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "North Carolina State University, Raleigh, NC, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Yihuan",
+      "family": "Dong",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "North Carolina State University, Raleigh, NC, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "given": "Dragan",
+      "family": "Lipovac",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "North Carolina State University, Raleigh, NC, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "published": {
+    "date-parts": [
+      [
+        2017,
+        3,
+        8
+      ]
+    ]
+  },
+  "page": "483-488",
+  "container-title": [
+    "Proceedings of the 2017 ACM SIGCSE Technical Symposium on Computer Science Education"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "draft_date": "2026-11-20",
+  "status": "first manuscript draft; author review pending",
+  "chapters": [
+    "Introduction",
+    "Literature Review",
+    "Proposed Method",
+    "Experimental Results",
+    "Conclusion"
+  ],
+  "pages": 48,
+  "approx_pdf_word_count": 11634,
+  "references": 12,
+  "figures": 4,
+  "tables": 11,
+  "compile": "success via bundled Tectonic CLI; built-in tool failed with Windows 1920",
+  "undefined_references": false,
+  "overfull_boxes": false,
+  "bibtex_warnings": false,
+  "page_geometry_outliers": [],
+  "rendered_pages": 48,
+  "visual_review": "not completed: required vision.js endpoint returned HTTP 401 invalid_api_key",
+  "experiment_scope": "new offline component recheck only; retrieval/model runs are historical",
+  "pdf_sha256": "79d1ad6b612c5724710b6f2adb7da0a20ad3d6c729a3c212c0b8011f7733b8b6"
+}

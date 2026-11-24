@@ -1,0 +1,34 @@
+[
+  {
+    "label": "fig:architecture",
+    "tex": "figures\\fig_architecture.tex",
+    "png": "figures\\fig_architecture.png",
+    "caption": "System responsibilities. The learner view receives feedback and profile information; individual chat and exercise paths use different subsets of the services.",
+    "original_start": 1978,
+    "original_end": 3020
+  },
+  {
+    "label": "fig:routing",
+    "tex": "figures\\fig_routing.tex",
+    "png": "figures\\fig_routing.png",
+    "caption": "Diagnosis routing. The fallback applies only to a no-finding result; an existing finding is returned directly. The two flag branches are alternatives.",
+    "original_start": 7275,
+    "original_end": 8760
+  },
+  {
+    "label": "fig:ast",
+    "tex": "figures\\fig_ast.tex",
+    "png": "figures\\fig_ast.png",
+    "caption": "Selected AST relationships for \\code{new = items.append(5)}. Arguments and source metadata are omitted to focus on the assignment--call relationship.",
+    "original_start": 10176,
+    "original_end": 10922
+  },
+  {
+    "label": "fig:teaching",
+    "tex": "figures\\fig_teaching.tex",
+    "png": "figures\\fig_teaching.png",
+    "caption": "Base policy for diagnosed chat turns. Counts refer to recorded events, not all submissions or verified persistent misconceptions. An optional steering configuration can override the base decision.",
+    "original_start": 16739,
+    "original_end": 17902
+  }
+]

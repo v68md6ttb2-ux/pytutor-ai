@@ -1,0 +1,56 @@
+\chapter{Introduction}
+\label{ch:intro}
+
+\section{Background and motivation}
+Beginners must understand how variables receive values, how conditions change execution, and how functions return results. An object may also change without a new object being returned. Sorva frames these difficulties through the notional machine: a learner's account of how a program executes \citep{sorva2013}. Syntactically valid code can still reveal confusion about these processes.
+
+Python provides a clear example through methods that modify a list. Consider the following program:
+\begin{lstlisting}[language=Python]
+items = [1, 2]
+new = items.append(5)
+print(new)
+\end{lstlisting}
+The program changes \code{items} and then prints \code{None}; methods that modify a list in place normally return \code{None} \citep{pythonlists}. If the learner expected \code{new} to hold the changed list, the useful teaching point is the difference between changing an object and returning a value. Corrected code alone leaves that expectation unexplored.
+
+A single error is weak evidence of a lasting misconception: the assignment could be deliberate, copied, or a slip. In this thesis, \emph{misconception-aware} means linking code patterns to possible conceptual difficulties within a defined catalogue. The label interprets available evidence; it is not direct access to the student's understanding.
+
+\section{Problem statement, aim, and research questions}
+Test-based grading checks a program against examples; code analysis can locate structural problems or interpret runtime errors; conversational models can explain results. A tutoring system must decide how to use this information in the learner's current situation.
+
+Prior support matters: a short prompt may suffice on a first attempt, while repeated difficulty may call for another explanation. Pedagogical steering makes the teaching action explicit \citep{stratl2025}, and coding tutors use learner-state estimates and verify candidate responses \citep{traver2025}. These approaches connect a reply to a teaching process across turns.
+
+PyTutor-AI connects code findings with feedback decisions and saved records. A diagnosed turn should expose the matched pattern, the history used by the policy, and the selected strategy. General-purpose LLMs can also explain errors, but the question here is how to implement these decisions explicitly and evaluate their behaviour.
+
+Text matching can flag harmless code or miss syntactic relationships. Structural analysis helps, but still needs context when the answer depends on the task. Chat messages, failed exercises, and hint requests also carry different information and must not be counted interchangeably. The method addresses these issues through separate diagnosis, policy, and recording functions.
+
+The aim is to design, implement, and evaluate PyTutor-AI, a Python tutoring system that uses explicit misconception-related findings to support guided feedback and follow-up practice. The project targets short beginner programs and a selected catalogue of eight categories.
+
+The objectives are to:
+\begin{enumerate}
+\item identify selected code patterns using syntax, AST structure, and available runtime or task information;
+\item provide a structured diagnosis containing a category, evidence, and method information;
+\item connect diagnosis and recorded history to a defined feedback strategy;
+\item record learning activity and use unresolved weaknesses to support subsequent practice;
+\item evaluate diagnosis, retrieval, and selected integration behaviours using reproducible artefacts.
+\end{enumerate}
+These objectives separate software behaviour from educational effect; the latter requires a learner study outside the current evidence.
+
+The thesis addresses three research questions:
+\begin{description}
+\item[RQ1.] Which of the eight selected categories can the structural diagnosis component identify, how does its behaviour compare with the native text-rule baseline, and what happens on separately authored cases and clean-code controls?
+\item[RQ2.] In the current learning corpus, what trade-offs do keyword and vector retrieval show in relevance, ranking, latency, and context size?
+\item[RQ3.] How are diagnosis, teaching decisions, and learner records connected, and which parts of that connection are supported by implementation and functional evidence?
+\end{description}
+RQ1 is a bounded classification task, RQ2 concerns retrieval rather than generated-reply quality, and RQ3 concerns system design and traceable behaviour. None assumes that component performance proves improved achievement.
+
+\section{Contributions}
+The diagnosis component covers eight categories. It combines parse-error handling, structural checks, and contextual or runtime signals. Each finding includes inspectable evidence; unmatched code may still contain problems.
+
+Findings and prior records select feedback, while exercise activity updates the records used for review and practice. Decision metadata preserves the strategy and its inputs, allowing behaviour to be checked separately from the generated reply.
+
+The evaluation uses development cases, separately authored holdout cases, clean controls, and retrieval queries. An exploratory experiment tests AST evidence injection without finding a faithfulness improvement. The work applies established ideas in AST analysis, retrieval, guided hints, and content-based recommendation to a specific tutoring system and assesses the resulting behaviour.
+
+\section{Scope and thesis organisation}
+The system focuses on beginner Python concepts: assignment, indentation, lists, loops, functions, and type conversion. Evaluation data are project-authored rather than collected from a classroom. The analysis does not implement complete Python semantics, infer a verified cognitive state, or prove termination of arbitrary programs. External models provide language generation and optional classification; they were not trained as part of this project.
+
+The source baseline is commit \code{f7d0aed} of the project repository \citep{pytutorrepo}. Historical artefacts and a source-level component recheck are identified in the results.

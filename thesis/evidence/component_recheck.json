@@ -1,0 +1,2253 @@
+{
+  "checked_at": "2026-11-20T09:51:49.757523+00:00",
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "commit": "f7d0aed594a1589ff1fe24c2cb0222c149abe322",
+  "protocol": "Native source; inert logging shim; no service/DB/LLM; existing question field supplied only to AST as supported by its interface; regex receives native code+stderr input.",
+  "datasets": {
+    "v2_test_cases.json": {
+      "sha256": "62569c1f2343e557f8eb81c22f53c85b517c65f01e44674ce3687c20d1fbefec",
+      "class_counts": {
+        "M1": 4,
+        "M2": 3,
+        "M3": 7,
+        "M4": 7,
+        "M5": 5,
+        "M6": 6,
+        "M7": 8,
+        "M8": 7
+      }
+    },
+    "clean_code_cases.json": {
+      "sha256": "967bffb95df52555fbc3fdca5ec8969f081bd67e9acb2d557b3b4e737b76b604"
+    },
+    "v2_holdout_cases.json": {
+      "sha256": "8d3e008fdb3c76b79ca12dee3bdc17bcd670c490ef8d6c5ee40077d804942585",
+      "class_counts": {
+        "M1": 4,
+        "M2": 4,
+        "M3": 4,
+        "M4": 4,
+        "M5": 4,
+        "M6": 4,
+        "M7": 3,
+        "M8": 3
+      }
+    },
+    "holdout_clean_cases.json": {
+      "sha256": "a4a69607f88c5a3e7bc94736406b9c3bfb7e9e8696d5a5a4affb202154f87da6"
+    }
+  },
+  "results": {
+    "development": {
+      "regex": {
+        "summary": {
+          "correct": 12,
+          "total": 47,
+          "exact_match": 0.2553191489361702,
+          "macro_f1": 0.2678804170739655,
+          "clean_false_positives": 15,
+          "clean_total": 22,
+          "per_class": {
+            "M1": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M2": {
+              "tp": 3,
+              "fp": 25,
+              "fn": 0,
+              "precision": 0.10714285714285714,
+              "recall": 1.0,
+              "f1": 0.19354838709677416
+            },
+            "M3": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 3,
+              "precision": 1.0,
+              "recall": 0.5714285714285714,
+              "f1": 0.7272727272727273
+            },
+            "M4": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 7,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M5": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 5,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M6": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 6,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M7": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 7,
+              "precision": 1.0,
+              "recall": 0.125,
+              "f1": 0.2222222222222222
+            },
+            "M8": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 7,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            }
+          }
+        },
+        "predictions": [
+          {
+            "case_id": "C01",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C02",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C03",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C04",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C05",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C06",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C07",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C08",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C09",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C10",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C11",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C12",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C14",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C15",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C16",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C18",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C19",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C20",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C21",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C22",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C23",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C24",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C25",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C26",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C27",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C28",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C29",
+            "expected": "M3",
+            "predicted": null
+          },
+          {
+            "case_id": "C30",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C31",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C32",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C33",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C34",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C35",
+            "expected": "M3",
+            "predicted": null
+          },
+          {
+            "case_id": "C36",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C37",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C38",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C39",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C40",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C42",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C43",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C44",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C45",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C46",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C47",
+            "expected": "M3",
+            "predicted": null
+          },
+          {
+            "case_id": "C48",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C49",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "C50",
+            "expected": "M8",
+            "predicted": "M2"
+          }
+        ],
+        "clean_predictions": [
+          {
+            "case_id": "CLEAN01",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN02",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN03",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN04",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN05",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN06",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN07",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN08",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN09",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN10",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN11",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN12",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN13",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN14",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN15",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN16",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN17",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN18",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN19",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN20",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN21",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "CLEAN22",
+            "expected": null,
+            "predicted": null
+          }
+        ]
+      },
+      "ast_code_stderr": {
+        "summary": {
+          "correct": 43,
+          "total": 47,
+          "exact_match": 0.9148936170212766,
+          "macro_f1": 0.9166666666666666,
+          "clean_false_positives": 0,
+          "clean_total": 22,
+          "per_class": {
+            "M1": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M2": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M3": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M4": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M5": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 4,
+              "precision": 1.0,
+              "recall": 0.2,
+              "f1": 0.33333333333333337
+            },
+            "M6": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M7": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M8": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            }
+          }
+        },
+        "predictions": [
+          {
+            "case_id": "C01",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C02",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C03",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C04",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C05",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "C06",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C07",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C08",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C09",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C10",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C11",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C12",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C14",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C15",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C16",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C18",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C19",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C20",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C21",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C22",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C23",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "C24",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C25",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C26",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C27",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C28",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C29",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C30",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C31",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "C32",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C33",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C34",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C35",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C36",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C37",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "C38",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C39",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C40",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C42",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C43",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "C44",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C45",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C46",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C47",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C48",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C49",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C50",
+            "expected": "M8",
+            "predicted": "M8"
+          }
+        ],
+        "clean_predictions": [
+          {
+            "case_id": "CLEAN01",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN02",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN03",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN04",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN05",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN06",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN07",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN08",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN09",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN10",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN11",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN12",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN13",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN14",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN15",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN16",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN17",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN18",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN19",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN20",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN21",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN22",
+            "expected": null,
+            "predicted": null
+          }
+        ]
+      },
+      "ast": {
+        "summary": {
+          "correct": 47,
+          "total": 47,
+          "exact_match": 1.0,
+          "macro_f1": 1.0,
+          "clean_false_positives": 0,
+          "clean_total": 22,
+          "per_class": {
+            "M1": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M2": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M3": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M4": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M5": {
+              "tp": 5,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M6": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M7": {
+              "tp": 8,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M8": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            }
+          }
+        },
+        "predictions": [
+          {
+            "case_id": "C01",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C02",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C03",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C04",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C05",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "C06",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C07",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C08",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C09",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C10",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C11",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C12",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C14",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C15",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C16",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C18",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C19",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C20",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C21",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C22",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C23",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "C24",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C25",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C26",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C27",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "C28",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "C29",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C30",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C31",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "C32",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C33",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C34",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C35",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C36",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C37",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "C38",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C39",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C40",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C42",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C43",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "C44",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "C45",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C46",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "C47",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "C48",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "C49",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "C50",
+            "expected": "M8",
+            "predicted": "M8"
+          }
+        ],
+        "clean_predictions": [
+          {
+            "case_id": "CLEAN01",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN02",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN03",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN04",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN05",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN06",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN07",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN08",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN09",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN10",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN11",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN12",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN13",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN14",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN15",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN16",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN17",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN18",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN19",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN20",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN21",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "CLEAN22",
+            "expected": null,
+            "predicted": null
+          }
+        ]
+      }
+    },
+    "holdout": {
+      "regex": {
+        "summary": {
+          "correct": 13,
+          "total": 30,
+          "exact_match": 0.43333333333333335,
+          "macro_f1": 0.3559782608695652,
+          "clean_false_positives": 10,
+          "clean_total": 15,
+          "per_class": {
+            "M1": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M2": {
+              "tp": 4,
+              "fp": 15,
+              "fn": 0,
+              "precision": 0.21052631578947367,
+              "recall": 1.0,
+              "f1": 0.34782608695652173
+            },
+            "M3": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M4": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 4,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M5": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 4,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M6": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 4,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M7": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 2,
+              "precision": 1.0,
+              "recall": 0.3333333333333333,
+              "f1": 0.5
+            },
+            "M8": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 3,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            }
+          }
+        },
+        "predictions": [
+          {
+            "case_id": "H01",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H02",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H03",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H04",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H05",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H06",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H07",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H08",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H09",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H10",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H11",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H12",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H13",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H14",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H15",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H16",
+            "expected": "M4",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H17",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H18",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H19",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H20",
+            "expected": "M5",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H21",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H22",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H23",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H24",
+            "expected": "M6",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H25",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H26",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "H27",
+            "expected": "M7",
+            "predicted": null
+          },
+          {
+            "case_id": "H28",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H29",
+            "expected": "M8",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H30",
+            "expected": "M8",
+            "predicted": "M2"
+          }
+        ],
+        "clean_predictions": [
+          {
+            "case_id": "HC01",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC02",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC03",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC04",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC05",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC06",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC07",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC08",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC09",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC10",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC11",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC12",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC13",
+            "expected": null,
+            "predicted": "M2"
+          },
+          {
+            "case_id": "HC14",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC15",
+            "expected": null,
+            "predicted": null
+          }
+        ]
+      },
+      "ast_code_stderr": {
+        "summary": {
+          "correct": 24,
+          "total": 30,
+          "exact_match": 0.8,
+          "macro_f1": 0.8333333333333334,
+          "clean_false_positives": 0,
+          "clean_total": 15,
+          "per_class": {
+            "M1": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M2": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M3": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M4": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M5": {
+              "tp": 0,
+              "fp": 0,
+              "fn": 4,
+              "precision": 0,
+              "recall": 0.0,
+              "f1": 0
+            },
+            "M6": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 2,
+              "precision": 1.0,
+              "recall": 0.5,
+              "f1": 0.6666666666666666
+            },
+            "M7": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M8": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            }
+          }
+        },
+        "predictions": [
+          {
+            "case_id": "H01",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H02",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H03",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H04",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H05",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H06",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H07",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H08",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H09",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H10",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H11",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H12",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H13",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H14",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H15",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H16",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H17",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H18",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H19",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H20",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H21",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "H22",
+            "expected": "M6",
+            "predicted": null
+          },
+          {
+            "case_id": "H23",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "H24",
+            "expected": "M6",
+            "predicted": null
+          },
+          {
+            "case_id": "H25",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H26",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H27",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H28",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "H29",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "H30",
+            "expected": "M8",
+            "predicted": "M8"
+          }
+        ],
+        "clean_predictions": [
+          {
+            "case_id": "HC01",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC02",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC03",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC04",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC05",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC06",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC07",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC08",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC09",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC10",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC11",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC12",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC13",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC14",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC15",
+            "expected": null,
+            "predicted": null
+          }
+        ]
+      },
+      "ast": {
+        "summary": {
+          "correct": 25,
+          "total": 30,
+          "exact_match": 0.8333333333333334,
+          "macro_f1": 0.8833333333333333,
+          "clean_false_positives": 0,
+          "clean_total": 15,
+          "per_class": {
+            "M1": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M2": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M3": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M4": {
+              "tp": 4,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M5": {
+              "tp": 1,
+              "fp": 0,
+              "fn": 3,
+              "precision": 1.0,
+              "recall": 0.25,
+              "f1": 0.4
+            },
+            "M6": {
+              "tp": 2,
+              "fp": 0,
+              "fn": 2,
+              "precision": 1.0,
+              "recall": 0.5,
+              "f1": 0.6666666666666666
+            },
+            "M7": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            },
+            "M8": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0
+            }
+          }
+        },
+        "predictions": [
+          {
+            "case_id": "H01",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H02",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H03",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H04",
+            "expected": "M1",
+            "predicted": "M1"
+          },
+          {
+            "case_id": "H05",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H06",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H07",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H08",
+            "expected": "M2",
+            "predicted": "M2"
+          },
+          {
+            "case_id": "H09",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H10",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H11",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H12",
+            "expected": "M3",
+            "predicted": "M3"
+          },
+          {
+            "case_id": "H13",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H14",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H15",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H16",
+            "expected": "M4",
+            "predicted": "M4"
+          },
+          {
+            "case_id": "H17",
+            "expected": "M5",
+            "predicted": "M5"
+          },
+          {
+            "case_id": "H18",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H19",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H20",
+            "expected": "M5",
+            "predicted": null
+          },
+          {
+            "case_id": "H21",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "H22",
+            "expected": "M6",
+            "predicted": null
+          },
+          {
+            "case_id": "H23",
+            "expected": "M6",
+            "predicted": "M6"
+          },
+          {
+            "case_id": "H24",
+            "expected": "M6",
+            "predicted": null
+          },
+          {
+            "case_id": "H25",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H26",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H27",
+            "expected": "M7",
+            "predicted": "M7"
+          },
+          {
+            "case_id": "H28",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "H29",
+            "expected": "M8",
+            "predicted": "M8"
+          },
+          {
+            "case_id": "H30",
+            "expected": "M8",
+            "predicted": "M8"
+          }
+        ],
+        "clean_predictions": [
+          {
+            "case_id": "HC01",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC02",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC03",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC04",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC05",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC06",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC07",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC08",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC09",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC10",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC11",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC12",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC13",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC14",
+            "expected": null,
+            "predicted": null
+          },
+          {
+            "case_id": "HC15",
+            "expected": null,
+            "predicted": null
+          }
+        ]
+      }
+    }
+  },
+  "m3_example": {
+    "primary": {
+      "misconception_id": "M3",
+      "misconception_name": "append 返回值误解",
+      "confidence": 0.92,
+      "evidence": "第 2 行：将 items.append() 的返回值赋给 'new' —— append() 返回 None，应直接调用而不赋值",
+      "ast_features": {
+        "method": "append",
+        "target": "new",
+        "object": "items",
+        "line": 2
+      },
+      "diagnosis_method": "ast"
+    },
+    "score": 0.575
+  }
+}

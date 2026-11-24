@@ -1,0 +1,50 @@
+\chapter{Literature Review}
+\label{ch:literature}
+
+\section{Feedback and intelligent tutoring}
+A failed test shows a mismatch between observed and required behaviour. Explaining it may require an account of execution, such as what a function returns; asking why the learner expected another value goes further. These levels of feedback require different evidence.
+
+Sorva connects misconceptions with mental models of execution \citep{sorva2013}, motivating explanations of runtime behaviour such as mutation versus a returned value; the eight labels here were selected separately. iSnap generates hints from previous submissions and logs hint use in a novice environment \citep{isnap2017}. Its ideas inform our feedback and recording, but its environment and algorithm are not a numerical baseline for our classifier.
+
+An LLM can phrase an explanation, give an example, or ask a follow-up question; choosing among these requires a teaching policy that considers current difficulty and prior interaction. StratL represents a multi-turn teaching plan as a transition graph and separates teaching intention from the generated utterance \citep{stratl2025}. PyTutor-AI borrows this separation but uses simpler base rules and does not replicate StratL's procedure. SocraticLLM uses a Socratic-style dataset and knowledge-enhanced generation for mathematics \citep{socratic2024}, while KELE separates planning and execution through structured rules \citep{kele2025}. Both motivate explicit teaching actions; neither establishes the effectiveness of our Python hint policy.
+
+Our policy selects a strategy from the detected category and prior records, and the LLM receives strategy-specific instructions. This avoids reproducing full training or multi-agent procedures; the policy can be checked deterministically, with reply compliance assessed separately.
+
+\section{Misconception-aware code diagnosis}
+Code can fail because of a misconception, an incomplete edit, or a slip; valid code can also accompany a question that reveals uncertainty. A diagnosis should preserve code and contextual evidence so a teacher can judge the suggested concept.
+
+McMining defines misconception discovery as a task and provides an LLM-based benchmark \citep{mcmining2025}. It studies broader discovery than our fixed checks; our eight labels are a separate selection and do not cover every conceptual difficulty.
+
+Text rules are cheap and can inspect snippets that do not parse, but nearby words need not form the relationship a rule assumes. An AST represents assignments, calls, loops, and returns explicitly \citep{pythonast} and can distinguish an assigned method call from text inside a string. Object types and function purpose still need other information; runtime signals and LLM classification add fallible interpretation.
+
+A matching type error can support a finding about an incompatible operation, but a successful run is inconclusive because a program may solve the wrong task. Boundary questions depend on intent: a loop endpoint is only wrong relative to the task. Chapter~\ref{ch:method} describes how structural checks use context.
+
+\section{Learner state, practice, and retrieval}
+TRAVER combines knowledge tracing with turn-by-turn verification in coding dialogue \citep{traver2025}, assessing replies against evolving task and learner state. Its trained workflow is more extensive than our historical-count policy, which records events without an equivalent knowledge-tracing model.
+
+CoderAgent simulates programming practice, including writing and revising code \citep{coderagent2025}. This motivates recording attempts and support, though simulated trajectories do not validate our heuristic weakness scores.
+
+PyTutor-AI records categories, exercise outcomes, unresolved concepts, and hint use---fields sufficient for review rules and content-based ranking when learner data are limited. Whether recommendations are useful requires ranking or learner evidence.
+
+Lewis et al. combine a language model with retrieved non-parametric memory \citep{rag2020}. PyTutor-AI applies retrieve-then-generate to a controlled Python corpus but does not reproduce the original training procedure. The retrieval experiment asks whether useful fragments can be found; keyword matching uses vocabulary overlap, while vector retrieval connects differently worded questions and material. PyTutor-AI can concatenate vector results before keyword results or optionally weight fragments found by both; these configurations must be distinguished when interpreting ``hybrid''. A generator may ignore a relevant fragment, and a retriever may supply irrelevant material when no answer exists. We therefore evaluate coverage, ranking, context size, and out-of-corpus queries; reply accuracy requires a further experiment.
+
+\section{Synthesis and research gap}
+The reviewed studies measure different outcomes---hint use, teaching strategy, coding progress, simulation, and misconception discovery---so their scores cannot rank against our diagnosis percentages. Table~\ref{tab:related} summarises the ideas used, without claiming exhaustive coverage.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Representative research and its relationship to PyTutor-AI.}
+\label{tab:related}
+\begin{tabularx}{\textwidth}{p{27mm}YY}
+\toprule
+Work & Contribution reviewed & Relationship to this project\\
+\midrule
+iSnap \citep{isnap2017} & Logging and next-step hints in novice programming & Supports process-based feedback; different environment and algorithm\\
+StratL \citep{stratl2025} & Explicit multi-turn teaching plan & Motivates separating teaching control from generation\\
+SocraticLLM / KELE \citep{socratic2024,kele2025} & Guided dialogue and structured planning & References for feedback intentions; full training procedures not reproduced\\
+TRAVER \citep{traver2025} & Knowledge tracing and turn verification for coding tutoring & Shows a richer learner-state workflow than historical counts\\
+McMining \citep{mcmining2025} & Discovery of misconceptions in student code & Related task; not the direct source of the eight project labels\\
+CoderAgent \citep{coderagent2025} & Simulation of iterative programming practice & Motivates trajectory-aware records; not a source of observed users\\
+\bottomrule
+\end{tabularx}
+\end{table}

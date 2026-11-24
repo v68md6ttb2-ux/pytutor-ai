@@ -1,0 +1,90 @@
+\chapter{Source and Evidence Map}
+\label{app:evidence}
+The source examined is commit \code{f7d0aed594a1589ff1fe24c2cb0222c149abe322} of the project repository \citep{pytutorrepo}. We checked it against the remote commit during outline preparation. Paths below refer to that repository unless marked as thesis-local. Result files from earlier runs are identified separately; a fresh full-system evaluation was not performed for every artefact.
+
+\begin{longtable}{p{46mm}p{103mm}}
+\caption{Implementation sources used for the manuscript.}\label{tab:sources}\\
+\toprule
+Mechanism & Source path\\
+\midrule
+\endfirsthead
+\toprule Mechanism & Source path\\\midrule
+\endhead
+Diagnosis routing & \path{backend/app/services/misconception_service.py}\\
+Structural orchestration & \path{backend/app/analysis/ast_analyzer.py}\\
+Category visitors & \path{backend/app/analysis/ast_visitors.py}\\
+Evidence scoring & \path{backend/app/analysis/confidence.py}\\
+Observable error classes & \path{backend/app/analysis/error_class.py}\\
+Category catalogue & \path{backend/app/data/misconceptions.json}\\
+Teaching policy & \path{backend/app/services/pedagogy_service.py}\\
+Chat integration & \path{backend/app/services/chat_service.py}\\
+Exercise integration & \path{backend/app/api/v1/exercises.py}\\
+Profile and recommendations & \path{backend/app/services/profile_service.py}\\
+Optional time decay & \path{backend/app/services/profile_decay_service.py}\\
+Retrieval integration & \path{backend/app/services/rag_service.py}\\
+Execution boundary & \path{backend/app/sandbox/runner.py}\\
+Feature defaults & \path{backend/app/core/config.py}\\
+\bottomrule
+\end{longtable}
+
+\section{Historical Evaluation Artefacts}
+The diagnosis files are \path{evaluation/v2_eval_results.json} and \path{evaluation/v2_holdout_results.json}. The four input files are \path{v2_test_cases.json}, \path{clean_code_cases.json}, \path{v2_holdout_cases.json}, and \path{holdout_clean_cases.json} in the same directory. The historical with-question prediction for every positive case was reproduced by the thesis component recheck.
+
+The retrieval files are \path{evaluation/rag_eval_results_tfidf.json}, \path{evaluation/rag_eval_results_vector.json}, and \path{evaluation/rag_eval_results_hybrid.json}. Query labels are in \path{evaluation/rag_golden.json}. The exploratory explanation experiment is documented in \path{research/faithfulness/RESULTS.md} and the two \path{results_real_deepseek_v2_run1.json} and \path{results_real_deepseek_v2_run2.json} files. The reported observations use these real-model outputs, excluding the stub-model demonstration.
+
+\section{Recheck Procedure}
+The thesis-local \path{evidence/recheck_components.py} script takes an optional \code{--repo} path. It loads the original visitors and analyser, compiles the original text-match function, supplies the existing input cases, and saves per-case predictions in \path{evidence/component_recheck.json}. The JSON also records the Python version, source commit, input hashes, and class counts. The structural with-question predictions are asserted equal to the historical files. The M3 example and its evidence score are checked separately.
+
+\begin{lstlisting}
+python evidence/recheck_components.py --repo PATH_TO_REPOSITORY
+\end{lstlisting}
+The command reproduces component predictions. It leaves external-model runs, database state, application tests, and historical timing outside its scope. The logging shim runs only within the recheck process and changes no production source file.
+
+\chapter{Additional Evaluation Details}
+\section{Category Support}
+\begin{table}[htbp]
+\centering
+\caption{Number of positive cases by category. Clean controls are counted separately.}
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Set & M1 & M2 & M3 & M4 & M5 & M6 & M7 & M8\\
+\midrule
+Development & 4 & 3 & 7 & 7 & 5 & 6 & 8 & 7\\
+Holdout & 4 & 4 & 4 & 4 & 4 & 4 & 3 & 3\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Boundary Examples}
+The M3 visitor identifies the direct assignment in the first example. The other forms lack that node pattern. These examples examine the visitor alone; a service with further fallback handling may return a different result.
+\begin{lstlisting}[language=Python]
+# Direct assignment from an attribute call: M3 pattern.
+new = items.append(5)
+
+# Standalone mutation: not the assignment pattern.
+items.append(5)
+
+# Annotated assignment: AnnAssign, not Assign.
+new: object = items.append(5)
+
+# Wrapped call: assignment value is a List, not Call.
+new = [items.append(5)]
+\end{lstlisting}
+Even a direct assignment can have a different meaning for a custom object whose \code{append} method returns a value. Receiver type and task purpose are therefore separate questions from the node relationship.
+
+\section{Exploratory Automatic Review}
+The historical multi-judge report covers ten examples, with a mean score of 2.40, revision rate of 9/10, and mean inter-judge agreement of approximately 0.405. There is no human reference. These values describe the automated review process: agreement between judges leaves agreement with educators untested, and the revision count does not show whether revisions improved a reply. The pilot is insufficient to validate teaching quality.
+
+\chapter{Reproducibility and Interpretation Checklist}
+The following distinctions govern reuse of the results:
+\begin{enumerate}
+\item Development cases validate current coverage; they do not provide independent generalisation evidence.
+\item Holdout cases were separately authored within the project, not collected from an external learner population.
+\item Structural diagnosis with a benchmark question has different information from the native text baseline and from current chat routing.
+\item The \code{ast-only} component includes targeted handling of parse errors and excludes the LLM service fallback.
+\item A primary label is selected by rule priority before evidence-score conversion; it is not a validated cognitive root cause.
+\item Code defaults, documented demonstration settings, stored experimental settings, and a deployed environment are distinct configurations.
+\item Retrieval scores do not measure final-answer faithfulness; automatic review does not measure learning gains.
+\item The current preparation rechecked components, not the full historical backend suite or a fresh external-model run.
+\end{enumerate}
+The accompanying editing notes list the evidence still needed before final submission. They contain no additional experimental results.

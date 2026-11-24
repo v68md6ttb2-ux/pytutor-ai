@@ -1,0 +1,62 @@
+[
+  {
+    "source": "evaluation/v2_eval_results.json",
+    "sha256": "e2f767f901450fb24f2dcaa579ee5fcf21a2bc76798890b3010be8180e03c72f"
+  },
+  {
+    "source": "evaluation/v2_holdout_results.json",
+    "sha256": "1eefcfb54511534f210c6dfeb7d3f8843c0c2baa7822bcf98d89b54577c547c5"
+  },
+  {
+    "source": "evaluation/v2_test_cases.json",
+    "sha256": "62569c1f2343e557f8eb81c22f53c85b517c65f01e44674ce3687c20d1fbefec"
+  },
+  {
+    "source": "evaluation/clean_code_cases.json",
+    "sha256": "967bffb95df52555fbc3fdca5ec8969f081bd67e9acb2d557b3b4e737b76b604"
+  },
+  {
+    "source": "evaluation/v2_holdout_cases.json",
+    "sha256": "8d3e008fdb3c76b79ca12dee3bdc17bcd670c490ef8d6c5ee40077d804942585"
+  },
+  {
+    "source": "evaluation/holdout_clean_cases.json",
+    "sha256": "a4a69607f88c5a3e7bc94736406b9c3bfb7e9e8696d5a5a4affb202154f87da6"
+  },
+  {
+    "source": "evaluation/rag_eval_results_tfidf.json",
+    "sha256": "dfe61eab9a02ed014f66dfa46a38b7106bc88b13ddccf6af0fd5986f3e3da323"
+  },
+  {
+    "source": "evaluation/rag_eval_results_vector.json",
+    "sha256": "cec34122d24dceba0ac865602237b6766e6b0fd5b8fa9f9954ecfcfbd21df98f"
+  },
+  {
+    "source": "evaluation/rag_eval_results_hybrid.json",
+    "sha256": "97f987cf44968fc574a0400471c9d7a918b8a3575c17635e361fae91a7279b2b"
+  },
+  {
+    "source": "evaluation/rag_golden.json",
+    "sha256": "e12dd15fc2fd54e7482adb762f602501e63840c9f10b6aedd46d7d907bf0df43"
+  },
+  {
+    "source": "evaluation/results_summary.csv",
+    "sha256": "cfe8084129120bb56b339d19a7039528f2922957586c15c18f4f227031a7a017"
+  },
+  {
+    "source": "research/faithfulness/RESULTS.md",
+    "sha256": "4dd3a309430a7097f770b70a26aee1a3c124dde4602d4408c3ae838eb5f4e939"
+  },
+  {
+    "source": "research/faithfulness/results_real_deepseek_v2_run1.json",
+    "sha256": "41aa43875d01a570a83340927a9fd0524ea390e32e724f875c5cd4cef10de7a9"
+  },
+  {
+    "source": "research/faithfulness/results_real_deepseek_v2_run2.json",
+    "sha256": "a476b59129ed740250a1592dafa4abd92501bec8ee675c1497e20cb2e25f9ffa"
+  },
+  {
+    "source": "research/faithfulness/dataset_seed.json",
+    "sha256": "8c8e786623216b9242fde670c5211fd6f18aac454efc934cc03e2c51702e765e"
+  }
+]

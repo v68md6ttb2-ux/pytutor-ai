@@ -1,0 +1,199 @@
+{
+  "isnap": {
+    "error": "HTTP Error 429: Too Many Requests",
+    "URL": "https://api.crossref.org/works/10.1145/3017680.3017762"
+  },
+  "socratic": {
+    "title": [
+      "Boosting Large Language Models with Socratic Method for Conversational Mathematics Teaching"
+    ],
+    "DOI": "10.1145/3627673.3679881",
+    "author": [
+      {
+        "ORCID": "https://orcid.org/0009-0004-9986-4606",
+        "authenticated-orcid": false,
+        "given": "Yuyang",
+        "family": "Ding",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "East China Normal University, Shanghai, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0009-0005-2220-4009",
+        "authenticated-orcid": false,
+        "given": "Hanglei",
+        "family": "Hu",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "East China Normal University, Shanghai, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-2589-0164",
+        "authenticated-orcid": false,
+        "given": "Jie",
+        "family": "Zhou",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "East China Normal University, Shanghai, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-5602-1877",
+        "authenticated-orcid": false,
+        "given": "Qin",
+        "family": "Chen",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "East China Normal University, Shanghai, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-7914-1978",
+        "authenticated-orcid": false,
+        "given": "Bo",
+        "family": "Jiang",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "East China Normal University, Shanghai, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-4723-5486",
+        "authenticated-orcid": false,
+        "given": "Liang",
+        "family": "He",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "East China Normal University, Shanghai, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "date": {
+      "date-parts": [
+        [
+          2024,
+          10,
+          21
+        ]
+      ]
+    },
+    "abstract": null,
+    "URL": "https://api.crossref.org/works/10.1145/3627673.3679881"
+  },
+  "traver": "@inproceedings{wang-etal-2025-training,\n    title = \"Training Turn-by-Turn Verifiers for Dialogue Tutoring Agents: The Curious Case of {LLM}s as Your Coding Tutors\",\n    author = \"Wang, Jian  and\n      Dai, Yinpei  and\n      Zhang, Yichi  and\n      Ma, Ziqiao  and\n      Li, Wenjie  and\n      Chai, Joyce\",\n    editor = \"Che, Wanxiang  and\n      Nabende, Joyce  and\n      Shutova, Ekaterina  and\n      Pilehvar, Mohammad Taher\",\n    booktitle = \"Findings of the {A}ssociation for {C}omputational {L}inguistics: {ACL} 2025\",\n    month = jul,\n    year = \"2025\",\n    address = \"Vienna, Austria\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2025.findings-acl.642/\",\n    doi = \"10.18653/v1/2025.findings-acl.642\",\n    pages = \"12416--12436\",\n    ISBN = \"979-8-89176-256-5\"\n}\n\n",
+  "kele": "@inproceedings{peng-etal-2025-kele,\n    title = \"{KELE}: A Multi-Agent Framework for Structured Socratic Teaching with Large Language Models\",\n    author = \"Peng, Xian  and\n      Yuan, Pan  and\n      Li, Dong  and\n      Cheng, Junlong  and\n      Fang, Qin  and\n      Liu, Zhi\",\n    editor = \"Christodoulopoulos, Christos  and\n      Chakraborty, Tanmoy  and\n      Rose, Carolyn  and\n      Peng, Violet\",\n    booktitle = \"Findings of the {A}ssociation for {C}omputational {L}inguistics: {EMNLP} 2025\",\n    month = nov,\n    year = \"2025\",\n    address = \"Suzhou, China\",\n    publisher = \"Association for Computational Linguistics\",\n    url = \"https://aclanthology.org/2025.findings-emnlp.888/\",\n    doi = \"10.18653/v1/2025.findings-emnlp.888\",\n    pages = \"16342--16362\",\n    ISBN = \"979-8-89176-335-7\"\n}\n\n",
+  "sorva": {
+    "title": [
+      "Notional machines and introductory programming education"
+    ],
+    "DOI": "10.1145/2483710.2483713",
+    "author": [
+      {
+        "given": "Juha",
+        "family": "Sorva",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "Aalto University, AALTO, Finland"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "date": {
+      "date-parts": [
+        [
+          2013,
+          6
+        ]
+      ]
+    },
+    "abstract": "<jats:p>This article brings together, summarizes, and comments on several threads of research that have contributed to our understanding of the challenges that novice programmers face when learning about the runtime dynamics of programs and the role of the computer in program execution. More specifically, the review covers the literature on programming misconceptions, the cognitive theory of mental models, constructivist theory of knowledge and learning, phenomenographic research on experiencing programming, and the theory of threshold concepts. These bodies of work are examined in relation to the concept of a “notional machine”—an abstract computer for executing programs of a particular kind. As a whole, the literature points to notional machines as a major challenge in introductory programming education. It is argued that instructors should acknowledge the notional machine as an explicit learning objective and address it in teaching. Teaching within some programming paradigms, such as object-oriented programming, may benefit from using multiple notional machines at different levels of abstraction. Pointers to some promising pedagogical techniques are provided.</jats:p>",
+    "URL": "https://api.crossref.org/works?query.title=Notional%20Machines%20and%20Introductory%20Programming%20Education&rows=1"
+  },
+  "rag": {
+    "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+    "URL": "https://arxiv.org/abs/2005.11401"
+  },
+  "mcmining": {
+    "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+    "URL": "https://arxiv.org/abs/2510.08827"
+  },
+  "stratl": {
+    "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+    "URL": "https://arxiv.org/abs/2410.03781"
+  },
+  "coderagent": {
+    "error": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1010)>",
+    "URL": "https://arxiv.org/abs/2505.20642"
+  },
+  "pyast": {
+    "URL": "https://docs.python.org/3/library/ast.html",
+    "title": "ast — Abstract syntax trees &#8212; Python 3.15.2 documentation",
+    "abstract": "",
+    "authors": "",
+    "bytes": 362170
+  },
+  "pydata": {
+    "URL": "https://docs.python.org/3/tutorial/datastructures.html",
+    "title": "5. Data Structures &#8212; Python 3.15.2 documentation",
+    "abstract": "",
+    "authors": "",
+    "bytes": 110941
+  }
+}

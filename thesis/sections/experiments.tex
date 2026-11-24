@@ -1,0 +1,207 @@
+\chapter{Experimental Results}
+\label{ch:experiments}
+
+\section{Evaluation design, data, protocol, and metrics}
+We evaluate primary-label diagnosis and fragment retrieval, examine selected software behaviours, and report an exploratory explanation-faithfulness experiment. These measurements concern different parts of the system. Diagnosis scores compare predictions with the authored labels; retrieval scores assess fragments. Neither those scores nor software tests directly measure student learning.
+
+The repository contains JSON and CSV results from earlier evaluations. During thesis preparation we loaded the unchanged diagnosis source, compared predictions with those files, and repeated structural diagnosis without question text. This offline recheck used no database, LLM calls, or student-code execution; retrieval and live-model results come from the earlier files. Classification and clean controls address RQ1, retrieval files and out-of-corpus queries address RQ2, and service calls plus decision examples address RQ3. No user study was conducted.
+
+The project-authored development set contains 47 cases and 22 clean programs, written alongside the rules as regression checks; it is not an independent test sample or training data. The holdout set contains 30 labelled cases and 15 clean controls, written separately before evaluation but still by one author. Table~\ref{tab:datasets} summarises the data; labels and the clean/problematic distinction remain author judgements without second-annotator agreement.
+
+The retrieval set labels relevant fragment IDs for 30 answerable queries over 41 fragments from ten documents. Five out-of-corpus queries inspect whether the retriever returns content without an answer and are excluded from relevance averages. The faithfulness set contains ten seeds (five positive, five hard-negative); its denominator shrinks when a reply has no checkable assertion. No real student cohort or outcome data are available.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Available evaluation data. All sets are project-authored and lack independent double annotation.}
+\label{tab:datasets}
+\begin{tabularx}{\textwidth}{p{37mm}p{26mm}Y}
+\toprule
+Set & Size & Use and boundary\\
+\midrule
+Diagnosis development & 47 labelled cases & Rules and cases developed together\\
+Development controls & 22 clean programs & Observed false alarms on prepared examples\\
+Diagnosis holdout & 30 labelled cases & Separately written; still single-author\\
+Holdout controls & 15 clean programs & Small negative-control set\\
+Retrieval queries & 30 answerable + 5 unanswerable & Fragment-level relevance; unanswerable cases separate\\
+Retrieval corpus & 10 documents / 41 fragments & Project-authored learning material\\
+Faithfulness seeds & 10 items & Exploratory comparison; incomplete assertion coverage\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\label{sec:conditions}
+The regex baseline uses \code{_rule_match} with the original catalogue; inputs are code and runtime text, and equal scores select the first category. The recheck compiles this function from the source syntax tree and makes no fallback model call. Structural conditions call the unchanged \code{analyze_misconceptions} and select the first finding, with two inputs: code + error (same fields as regex) and code + error + benchmark question (the historical setting). Both include M1/M2 parse checks and exclude the LLM fallback.
+
+We loaded the analyser from the project source with an inert logging shim; every with-question prediction matched the earlier JSON. The check reproduces component predictions but not database, interface, or external-model paths. Stored retrieval results use hybrid weights off, and timings include different service costs.
+
+For $N$ positive cases, primary-label exact match is
+\begin{equation}
+\mathrm{EM}=\frac{1}{N}\sum_{i=1}^{N}\mathbf{1}[\hat{m}_i=m_i].
+\end{equation}
+A missing label counts as an incorrect prediction. For each of the eight labels, precision, recall, and F1 are computed from true positives, false positives, and false negatives. Macro-F1 averages the eight class F1 values. In this protocol these class metrics use category-positive cases; clean-control false alarms are reported separately:
+\begin{equation}
+\mathrm{FPR}_{\mathrm{clean}}=
+\frac{\text{clean programs receiving any category}}{\text{number of clean programs}}.
+\end{equation}
+The denominator distinction matters when comparing with another study that includes clean examples in class precision. The recheck computes unrounded class values before rounding the final macro average; the historical script rounds individual class F1 values first. The displayed structural macro results agree at three decimal places.
+
+For retrieval, let $R_q$ be the annotated relevant set and $S_{q,k}$ the returned top-$k$ set for an answerable query $q$. Hit@$k$ averages whether $R_q\cap S_{q,k}$ is non-empty. Recall@$k$ averages $|R_q\cap S_{q,k}|/|R_q|$. MRR averages the reciprocal of the first relevant rank, or zero when none is returned in the evaluated list. Larger values are better for these relevance metrics.
+
+The splitter estimates context-token counts; they are not exact tokenisation or billed usage. Latencies are reported in milliseconds, with hardware, network, warm-up, and cache conditions uncontrolled in the available runs. Counts accompany percentages because the samples are small. In particular, observing no false alarms in 15 controls leaves uncertainty about the rate on other code.
+
+\section{RQ1: diagnosis results and failure analysis}
+\label{sec:diagnosisresults}
+Table~\ref{tab:diagnosis} reports the offline recheck. The with-question rows reproduce earlier structural predictions; the other rows provide the native baseline and the code-plus-error comparison. All rows exclude LLM classification.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Diagnosis component results. Exact match and macro-F1 use labelled positive cases; clean false alarms have their own denominator. All conditions exclude LLM fallback.}
+\label{tab:diagnosis}
+\begin{tabularx}{\textwidth}{p{24mm}Yrrr}
+\toprule
+Set & Condition & Correct & Macro-F1 & Clean FP\\
+\midrule
+Development & Native text rules & 12/47 & 0.268 & 15/22\\
+Development & Structural, code + error & 43/47 & 0.917 & 0/22\\
+Development & Structural, with question & 47/47 & 1.000 & 0/22\\
+\midrule
+Holdout & Native text rules & 13/30 & 0.356 & 10/15\\
+Holdout & Structural, code + error & 24/30 & 0.833 & 0/15\\
+Holdout & Structural, with question & 25/30 & 0.883 & 0/15\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+With question text, structural analysis identified all 47 development labels and left 22 controls unflagged; the native rules identified 12 and flagged 15. The 100\% result reflects coverage of cases developed with the rules, not unrestricted generalisation, and the baseline is the project's old rules. With code and runtime text, structural analysis identified 24/30 holdout labels (80.0\%) against 13/30 (43.3\%) for native rules; a tuned text classifier or general-purpose model would require another comparison. Adding question text recovered one holdout case, raising exact match to 25/30 (83.3\%) and macro-F1 to 0.883; it also recovered four development cases, all M5. Neither structural condition flagged the 15 holdout controls, while the text baseline flagged ten; these controls are too few to estimate performance on arbitrary valid Python.
+
+Table~\ref{tab:classes} gives the per-category holdout results; each class has only three or four positives, and all five misses are no-label outcomes.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Structural with-question results on the 30 positive holdout cases. Each class has very small support.}
+\label{tab:classes}
+\begin{tabular}{lrrrrr}
+\toprule
+Category & Support & TP & Precision & Recall & F1\\
+\midrule
+M1 & 4 & 4 & 1.000 & 1.000 & 1.000\\
+M2 & 4 & 4 & 1.000 & 1.000 & 1.000\\
+M3 & 4 & 4 & 1.000 & 1.000 & 1.000\\
+M4 & 4 & 4 & 1.000 & 1.000 & 1.000\\
+M5 & 4 & 1 & 1.000 & 0.250 & 0.400\\
+M6 & 4 & 2 & 1.000 & 0.500 & 0.667\\
+M7 & 3 & 3 & 1.000 & 1.000 & 1.000\\
+M8 & 3 & 3 & 1.000 & 1.000 & 1.000\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The M5 misses are H18, H19, and H20. H18 iterates over \code{range(0,3)} and asks whether it should reach 3. H19 iterates over \code{range(2,8)} and asks why the maximum is 7. H20 uses \code{range(1,4)} and asks whether 4 is included. These are legitimate Python loops; the intended misconception label is supplied by the question. The structural input alone cannot establish that the learner expected an inclusive endpoint.
+
+M5's wording cues miss several of these paraphrases. One loop also exceeds the small-range cue and lacks the structural signals needed to pass the threshold. The failures point to specific gaps in the current rules and context handling. Testing those gaps is a more direct next step than increasing the complexity of diagnosis without knowing which inputs are missing.
+
+The M6 misses are H22 and H24. H22 defines \code{greet}, prints a greeting, assigns the function's result, and asks why it is \code{None}. H24 does the same through a function named \code{show}. Both names are exempted as display functions. That exemption avoids some false alarms, but it also prevents these cases from receiving M6. The M6 visitor does not use the supplied learner question to override the exemption or analyse the caller's expectation.
+
+These labels also need review. A greeting function can correctly print a message and return nothing; the caller's question may reveal uncertainty rather than a defect in the function. The dataset nevertheless asks for a misconception-related teaching label. Future annotations should distinguish the program's behaviour from the learner's question and any inferred misconception.
+
+\section{RQ2: retrieval trade-offs}
+In the stored top-five results, vector retrieval found a relevant fragment for 28 of 30 answerable queries, compared with 27 for keyword retrieval (Table~\ref{tab:retrieval}). Recall rose by 0.094 while MRR fell by 0.010. More relevant material was retrieved overall, but the first relevant fragment did not always rank as early. The Hit@5 difference amounts to one query in this small set.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Stored retrieval results at $k=5$ over 30 answerable queries and 41 corpus fragments. Context sizes are estimates; vector times include an external embedding call.}
+\label{tab:retrieval}
+\begin{tabularx}{\textwidth}{Yrrrrr}
+\toprule
+Mode & Hit@5 & Recall@5 & MRR & Mean ms & Context tokens\\
+\midrule
+Keyword & 0.900 & 0.407 & 0.900 & 0.1 & 250.6\\
+Vector & 0.933 & 0.501 & 0.890 & 635.6 & 314.7\\
+Hybrid, weights off & 0.933 & 0.501 & 0.890 & 641.1 & 314.7\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Vector retrieval used more estimated context tokens on average, so this configuration offered no token saving. Its longer latency includes network and embedding-service time. The keyword result, meanwhile, is small enough to be sensitive to timer resolution and warm-cache behaviour. These measurements describe the recorded service paths rather than the isolated complexity of their ranking algorithms.
+
+Hybrid retrieval produced the same relevance scores and context size as vector retrieval because weights were off and vector results filled the top five positions. Its mean recorded time was 641.1\,ms. To assess fusion itself, the weighted scoring rule would need to be enabled, documented, and compared on these queries.
+
+Every mode returned fragments for all five unanswerable queries. The mean top score was 1.000 for keywords and 0.498 for vectors, on different scoring scales. Neither is calibrated as an answerability probability. The retrieval layer therefore supplied content without recognising these cases as outside its corpus. We did not test whether the generator then answered, declined, or corrected that context.
+
+\section{RQ3: integration and functional evidence}
+The latest change record reports 272 passing backend tests and 12 excluded tests, compared with the older count of 251 in the README and reproducibility documents. We retain the newer count as a historical record. Thesis preparation rechecked diagnosis components only; it did not rerun the full suite, the excluded external-service tests, or the frontend build.
+
+Diagnosed chat turns retain the category, evidence, score, strategy, hint level, and prior-event count in metadata. The source can be followed for M3: with no prior event, the policy selects progressive hinting at level 1, and later detections change the strategy according to history. The component recheck verified the example's M3 finding and score of 0.575. No live reply or new database write was checked in that run.
+
+Exercise submissions record outcomes and update concept weaknesses through their own path. Recommendations read unresolved concepts or follow the learning path. These calls are present in the source, but successful commits and concurrent updates need service-level testing with a controlled database. Exercise failures should also be checked separately from the events used to count chat misconceptions.
+
+Table~\ref{tab:validation} lists the available checks and the questions they leave open.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Evidence level for the main mechanisms.}
+\label{tab:validation}
+\begin{tabularx}{\textwidth}{p{33mm}YY}
+\toprule
+Mechanism & Available evidence & Remaining question\\
+\midrule
+Diagnosis & Native-source recheck and historical predictions & Independent real-code performance\\
+Teaching selection & Policy source and historical tests & Reply compliance and pedagogical value\\
+Event / weakness update & Service calls and historical functional tests & Failure, duplication, and concurrency behaviour\\
+Practice suggestion & Implemented rules and content ranking & Recommendation quality and learner outcomes\\
+Code execution boundary & Runner/configuration source and historical tests & Deployment-specific security validation\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Exploratory explanation-faithfulness experiment}
+\label{sec:faithfulness}
+The research directory contains a small real-model comparison between C1, explanation from code alone, and C2, explanation after AST facts are supplied. The recorded generator is \code{deepseek-chat}, with temperature 0.3 and a 600-token output limit. Each run uses ten seeds under both conditions. A deterministic rule extractor and verifier assess selected structural assertions. The cleaned extractor version, \code{rules_v2}, is used for the current reported results.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Existing exploratory faithfulness results. Scores cover only replies producing checkable assertions. The paired differences use five scored pairs in each run.}
+\label{tab:faithfulness}
+\begin{tabular}{lrrrr}
+\toprule
+Run & C1 score & C2 score & C1 scored & C2 scored\\
+\midrule
+1 & 0.683 & 0.647 & 5/10 & 7/10\\
+2 & 0.667 & 0.650 & 6/10 & 7/10\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The stored paired mean differences, C2 minus C1, are $-0.127$ and $-0.090$. Their reported 95\% intervals are $[-0.564,0.206]$ and $[-0.190,0.000]$. These are existing report outputs, not newly estimated intervals. Because coverage differs between conditions, the paired differences should not be reconstructed by simply subtracting the aggregate score columns in Table~\ref{tab:faithfulness}.
+
+Evidence injection did not yield an established improvement in either run. With only five scored pairs per run, the comparison is too limited to conclude that C1 is generally better or that structural evidence is unhelpful. The assertion process also lacks an independent human audit, and changes in Markdown filtering altered its denominator. The pilot confirms that the pipeline ran, but the current measurement provides no validated estimate of how people would judge the explanations.
+
+\section{Discussion, limitations, and reproducibility}
+\subsection{Diagnosis findings (RQ1)}
+The equal-input comparison answers RQ1: structural checks identified 24/30 holdout labels against 13/30 for native rules, with fewer clean alarms; development showed the same pattern. The increase to 25/30 used additional question text, so the full difference is not attributable to AST alone.
+
+M5 failures concern which context reaches the rule and how it is interpreted; M6 failures concern a valid display function used by a caller expecting a value. Adding category names would not resolve these; clearer annotations and input handling are needed. Method-name matching, dictionary exemptions, and update heuristics can also fail on valid code, and the existing score leaves that uncertainty unquantified.
+
+\subsection{Retrieval trade-offs (RQ2)}
+Vector retrieval found more relevant material at the cost of more context and an external call, while ranking the first fragment slightly later. Keywords may suffice for a small corpus; semantic retrieval may help paraphrases, but the present set is too small to establish that division.
+
+The unanswerable queries show why rejection needs separate evaluation: a retriever can return a fragment without suitable material. Future tests should measure rejection, coverage, and generator use of context.
+
+\subsection{Tracing feedback decisions (RQ3)}
+Service code and metadata expose the diagnosis and history behind a decision, so the strategy can be reconstructed. Whether it was the right action requires feedback or learner evaluation. Chat and exercises pass different inputs and save different events; the benchmark question does not reach diagnosis through chat, and optional mechanisms may be disabled. Integration studies should specify entry point, configuration, starting profile, expected writes, and output.
+
+\subsection{Interpreting the evidence-injection pilot}
+AST facts describe structure, but explaining difficulty may also require task intent and a teaching action. Low assertion coverage and the rule verifier limit the pilot; prompt design, fact selection, and extraction language were not isolated in an ablation. Auditing the measurement is necessary before general conclusions.
+
+\subsection{Limitations and threats to validity}
+\subsubsection{Internal validity}
+Development cases and rules were constructed together; holdout cases were separately written but share the same project context. The component recheck removes database and model dependencies, reproducing analyser predictions but not service failures or fallback performance; question text creates an input difference controlled only by the code-plus-error condition. Historical retrieval times are not hardware-controlled, and the artefacts lack a complete warm-up/cache protocol, so latency is an operational snapshot.
+
+\subsubsection{Construct validity}
+Labels can combine a buggy pattern, valid code with uncertainty, and an inferred belief; a primary-label score measures agreement with the authored catalogue, not confirmed understanding. Weakness severity and event counts are operational records, not validated mastery. Retrieval relevance measures fragments, not explanations; automatic review and assertion verifiers measure their own rubrics, and the faithfulness pilot has no independent human reference.
+
+\subsubsection{External and conclusion validity}
+The data contain short selected programs, few examples per class, a small corpus, and many Chinese query or phrase cues. Other courses, languages, styles, libraries, and longer programs may behave differently. No external benchmark, independent double annotation, or classroom cohort is included; repeated runs do not add independent seeds. Grades, workload, retention, and ranking effectiveness were not measured.
+
+\subsection{Data handling and reproducibility}
+The datasets are project-authored, not private student submissions. The application can send prompts, code, and context to external services; deployment would require notice, access controls, and institutional approval, none of which is claimed here. The package retains the recheck script, per-case outputs, hashes, source map, and historical result copies; it identifies the source commit and separates recorded model experiments from new offline checks.

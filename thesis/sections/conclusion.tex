@@ -1,0 +1,21 @@
+\chapter{Conclusion}
+\label{ch:conclusion}
+
+\section{Answers to research questions}
+PyTutor-AI uses code findings to inform feedback and retain records for practice. It implements parse-error checks and AST visitors for eight categories, a teaching policy, and retrieval.
+
+On the 30 positive holdout cases, structural diagnosis with code and runtime text identified 24 expected labels, compared with 13 for the native text rules; adding the benchmark question raised this to 25. Neither structural condition raised a false alarm on the 15 holdout controls. Endpoint questions and display functions whose callers expected a returned value accounted for the misses.
+
+Vector retrieval found a relevant fragment for one more of the 30 answerable queries and increased recall, but ranked some relevant fragments later and used more context and an external embedding call. Hybrid produced no established fusion benefit; all five out-of-corpus queries still received fragments, and the faithfulness pilot found no benefit from AST injection.
+
+Source inspection documents how diagnosis, policy, and records connect, with optional features separated from evaluated conditions. Further evidence is needed for reply compliance, mastery estimates, or learning gains; the results do not support claims of replacing a teacher or generally outperforming conversational models.
+
+\section{Contributions revisited}
+The project contributes an inspectable diagnosis layer, a simple policy that turns findings and prior events into teaching decisions, a record structure linking practice to later support, and a reproducible evaluation of component behaviour. These are engineering and evaluation contributions within the tested system; they do not establish classroom learning gains.
+
+\section{Future work}
+Diagnosis needs cases written and reviewed independently of rule development, distinguishing program defects from concept questions and inferred misconceptions. The M5/M6 failures target context routing and call-site interpretation; revised rules should become regression-tested on a new held-out set.
+
+Service paths need controlled integration tests starting from known history, inspecting diagnosis inputs, selected strategy, reply, and saved events. Missing context, unavailable services, duplicate requests, and failed writes need separate cases; the restricted LLM fallback needs trigger-rate, error, and cost measurements.
+
+Human reviewers and a learner study, subject to approval, should assess evidence justification, hint appropriateness, and changes in understanding with a defined comparison; until then, conclusions apply to the authored cases and implementation examined here.

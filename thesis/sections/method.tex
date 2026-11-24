@@ -1,0 +1,243 @@
+\chapter{Proposed Method}
+\label{ch:method}
+
+\section{System overview and requirements}
+Learners can ask a question in chat or submit code for an exercise. Chat may include a snippet; exercises have test cases and a hint interface. Both paths diagnose but supply different inputs and save different records; runtime information is available only when the calling path supplies it.
+
+The system returns exercise results and, where a pattern matches, a diagnosis with evidence. It uses history to select feedback, saves activity for review, and supplies retrieval, profiles, and recommendations. Authentication and roles support these functions but are not part of the diagnosis method. Services exchange compatible records, handle unavailable dependencies, and keep execution within the runner's limits. A response retains diagnosis, evidence, strategy, and hint level; sentence-level verification is separate, and AST inspection only reads structure.
+
+\label{sec:architecture}
+The Next.js and React frontend contains chat, a code editor, exercise pages, and learner views. FastAPI services handle retrieval, diagnosis, generation, execution, and profiles. SQLAlchemy models store users, messages, exercise activity, and misconception records. Conversational generation and vector embeddings use external services; no model was trained for this project.
+
+Figure~\ref{fig:architecture} shows the service interfaces. The path taken depends on the request. A concept question may need no code diagnosis, while a failed exercise result can enter diagnosis after grading. Profile reads and writes occur at the points required by each path.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=9mm and 12mm]
+\node[box] (user) {Learner interface\\chat, editor, exercises};
+\node[box,right=of user] (api) {Backend services\\request handling};
+\node[box,right=of api] (model) {External LLM\\response generation};
+\node[box,below=of user] (run) {Code runner\\tests and execution};
+\node[box,below=of api] (diag) {Diagnosis and\\teaching decisions};
+\node[box,below=of model] (rag) {Learning corpus\\keyword / vector retrieval};
+\node[box,below=of diag] (db) {Persistent records\\events, profiles, messages};
+\draw[flow] (user)--(api);
+\draw[flow] (api)--(model);
+\draw[flow] (api)--(diag);
+\draw[flow] (api)--(run);
+\draw[flow] (rag)--(model);
+\draw[flow] (diag)--(db);
+\draw[flow] (db.west) -- ++(-8mm,0) -| ([xshift=-7mm]user.west) -- (user.west);
+\end{tikzpicture}
+\caption{System responsibilities. The learner view receives feedback and profile information; individual chat and exercise paths use different subsets of the services.}
+\label{fig:architecture}
+\end{figure}
+
+Chat attempts diagnosis when an input check finds fenced code or a function definition. It passes the extracted code with empty \code{stderr}, without running the snippet or forwarding the whole question, so an error message elsewhere may never reach the classifier. Exercises run tests and compare outputs; an unsuccessful submission triggers error classification and a diagnosis call with code, runtime information, and exercise description, then records activity and updates weaknesses. The description is task requirements, not the benchmark's \code{student_question}.
+
+\section{Diagnosis: categories and routing}
+Let a diagnosis input be
+\begin{equation}
+x=(c,e,q),
+\end{equation}
+where $c$ is code, $e$ is available runtime error text, and $q$ is optional contextual text. Any field other than code may be empty. A finding contains a category $m\in\mathcal{M}$, evidence, method information, and selected structural attributes, where $\mathcal{M}=\{M1,\ldots,M8\}$. The analyser may return several findings or none. A service response selects a primary finding for the main interface while retaining additional findings when available.
+
+Table~\ref{tab:taxonomy} defines the eight categories selected for this implementation. Each connects a beginner concept with patterns the system can inspect and feedback it can give. Misconception research motivates studying these difficulties \citep{sorva2013,mcmining2025}; the exact selection and numbering belong to this project. Some categories describe error symptoms, so a match alone gives limited evidence of a stable belief.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Project-selected categories and the main evidence examined. A signal is a heuristic cue, not confirmation of learner intent.}
+\label{tab:taxonomy}
+\begin{tabularx}{\textwidth}{lp{34mm}Y}
+\toprule
+Code & Category & Main signal\\
+\midrule
+M1 & Assignment / comparison & Invalid assignment-like syntax in a condition\\
+M2 & Indentation & Parse errors and indentation-related patterns\\
+M3 & In-place return value & Assignment from a selected mutating method call\\
+M4 & Index / value & Iterated element reused as an index of the same object\\
+M5 & \code{range} endpoint & Loop-boundary structure and contextual signals\\
+M6 & \code{print} / \code{return} & Function output and return-related patterns\\
+M7 & Type conversion & Operand cues, lightweight type tracking, and error text\\
+M8 & \code{while} update / condition & Missing update or exit cues in selected loop forms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Error classification records syntax errors, runtime failures, and output mismatches separately from the labels in $\mathcal{M}$. The flag \code{beyond_misconceptions} is set when an error has no matched category. Its name should be read narrowly: the cause is unclassified, and could still fall within the catalogue. Code with no finding can also contain errors.
+
+\label{sec:routing}
+\code{ENABLE_AST_DIAGNOSIS} selects the entry path. When off, text rules match code and error text; equal scores go to the first catalogue match. When on, the structural analyser parses the code and runs M3--M8 visitors on a valid tree; if parsing fails, targeted M1/M2 checks use syntax, indentation, and text fallbacks. \code{ast-only} includes both parse-error rules and valid-AST checks.
+
+After a no-finding result, LLM classification is allowed only for non-empty code with non-empty error text and at most 30 lines. The prompt requests M1--M8 or \code{none} and defines no new categories. Chat supplies empty error text, so its no-match results normally fail this gate.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=7mm and 20mm]
+\node[box,text width=43mm] (input) {Code + available error / context};
+\node[decision,below=of input] (flag) {AST enabled?};
+\node[box,text width=39mm,below left=9mm and 12mm of flag] (regex) {Native text rules};
+\node[box,text width=39mm,below right=9mm and 12mm of flag] (parse) {Attempt AST parse};
+\node[box,text width=39mm,below=of parse] (checks) {Valid: M3--M8 visitors\\Invalid: M1/M2 checks};
+\node[box,text width=50mm,below=23mm of regex] (found) {Finding(s)?\\select primary and preserve evidence};
+\node[box,text width=50mm,below=of found] (fallback) {No finding: LLM only if\\code, error text, and length gate pass};
+\node[box,text width=50mm,below=of fallback] (output) {Finding or no matched category};
+\draw[flow] (input)--(flag);
+\draw[flow] (flag)--node[above left,font=\scriptsize]{no}(regex);
+\draw[flow] (flag)--node[above right,font=\scriptsize]{yes}(parse);
+\draw[flow] (parse)--(checks);
+\draw[flow] (regex)--(found);
+\draw[flow] (checks.south) |- (found.east);
+\draw[flow] (found)--node[right,font=\scriptsize]{no finding}(fallback);
+\draw[flow] (fallback)--(output);
+\draw[flow] (found.west)--++(-12mm,0) |- node[pos=0.25,left,font=\scriptsize]{finding}(output.west);
+\end{tikzpicture}
+\caption{Diagnosis routing. The fallback applies only to a no-finding result; an existing finding is returned directly. The two flag branches are alternatives.}
+\label{fig:routing}
+\end{figure}
+
+\begin{lstlisting}[caption={Diagnosis orchestration, matching the current source-level branches.},label={alg:diagnosis}]
+diagnose(code, error_text, context, ast_enabled):
+    if ast_enabled:
+        tree, parse_error = safe_parse(code)
+        if tree exists:
+            findings = run_M3_to_M8_checks(tree, code,
+                                         error_text, context)
+            sort findings by native rule priority
+        else:
+            findings = targeted_M1_M2_checks(code, parse_error)
+        if findings:
+            report evidence scores without re-sorting
+            return primary=findings[0], all_findings=findings
+    else:
+        findings = native_text_matches(code, error_text)
+        if findings:
+            return first highest-scored finding
+    if code nonempty and error_text nonempty and lines <= 30:
+        attempt constrained LLM classification
+        return accepted finding if one is produced
+    return no_matched_category
+\end{lstlisting}
+
+\section{AST checks and evidence scoring}
+\label{sec:ast}
+\subsection{Representation and a Worked Example}
+Python's \code{ast} module exposes node types and their relationships \citep{pythonast}. In the second line of the introductory example, an assignment contains a call whose function is the attribute \code{append}. The rule checks that relationship, rather than searching for the word \code{append} anywhere in the snippet.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=8mm and 15mm]
+\node[box,text width=26mm] (assign) {Assign};
+\node[box,text width=29mm,below left=of assign] (target) {Target: \code{new}};
+\node[box,text width=26mm,below right=of assign] (call) {Value: Call};
+\node[box,text width=36mm,below=of call] (attr) {Attribute: \code{append}};
+\node[box,text width=36mm,below=of attr] (obj) {Object: \code{items}};
+\draw[flow] (assign)--(target);
+\draw[flow] (assign)--(call);
+\draw[flow] (call)--(attr);
+\draw[flow] (attr)--(obj);
+\end{tikzpicture}
+\caption{Selected AST relationships for \code{new = items.append(5)}. Arguments and source metadata are omitted to focus on the assignment--call relationship.}
+\label{fig:ast}
+\end{figure}
+
+M3 checks an \code{Assign} whose value is a \code{Call} to an \code{Attribute} in a selected method-name set: \code{append}, \code{extend}, \code{insert}, \code{remove}, \code{sort}, \code{reverse}, or \code{clear}. It returns the line number, target, object expression, and method. Standalone \code{items.append(5)} does not meet the assignment pattern. Text inside a string is also not interpreted as such a call.
+
+Two limitations follow from this rule. A custom object may have a method of the same name that returns a value. Also, an \code{AnnAssign} or a call wrapped inside another expression has a different node pattern from a direct assignment value. The current evidence message can give the standard list-method explanation even when the receiver's type is uncertain. AST parsing exposes the relationship but does not resolve that uncertainty.
+
+\subsection{Container and Loop Checks}
+M4 finds a simple loop that iterates over an object and then subscripts that same object with the loop variable. It exempts dictionary-like variables inferred from selected literals, constructors, annotations, returns, and parameter names; this reduces false alarms but is not complete type inference, and legal integer-valued sequences can resemble the pattern.
+
+M5 collects \code{range} arguments and scores references to the stop value, later use of the loop variable, and boundary wording; a finding requires sufficient weighted cues. Several cues are Chinese phrases, so an English paraphrase may behave differently.
+
+M8 examines selected \code{while} forms for an exit or update to a condition variable, excluding called names and selected built-ins. Marking any condition variable as modified suppresses the warning, which avoids false alarms but can miss non-termination; an exit statement may also be unreachable.
+
+\subsection{Functions and Type-Related Checks}
+M6 searches for printing without a return where computation is suggested by an expression or function name. Display-oriented names such as \code{greet} and \code{show} are exempted. Another check identifies selected print statements following a direct return. These rules help avoid flagging every display function, but exemptions can miss a genuine question about a caller receiving \code{None}. The check also uses tree walks rather than complete interprocedural control-flow analysis.
+
+M7 tracks selected assignments and conversions to obtain operand and variable-type cues. It combines these with available error text when checking an operation. Aliasing, dynamic calls, and scope can exceed this limited type tracking, and an unusual operation may still be valid Python. Clean examples are therefore necessary alongside erroneous ones when evaluating the rule.
+
+\subsection{Multiple Findings and Primary Selection}
+A program can produce findings from several visitors. The analyser sorts them by preset rule scores. The service converts their evidence scores, selects the first finding, and retains \code{all_findings}, but does not re-sort the list. The primary label thus follows the original rule priority even if another candidate receives a higher final score. Neither number is a calibrated probability or a verified causal explanation.
+
+The evaluation compares one expected category with one primary prediction per case. Assessing all issues or a teacher's preferred ordering would require separate labels and metrics.
+
+The score engine starts with a prior $p_0=0.30$ and adds hand-set contributions in log-odds space:
+\begin{align}
+z &= \log\frac{p_0}{1-p_0}+\sum_i w_i I_i,\\
+s &= \min\left(0.95,\max\left(0.15,\frac{1}{1+e^{-z}}\right)\right),
+\end{align}
+where $I_i$ indicates an enabled evidence term. The first and second structural-feature thresholds contribute 0.60 and 0.55. Matching runtime text contributes 1.00. The helper also supports channel-agreement and negative heuristic terms. These terms are part of a score implementation; the main path does not automatically execute three independent diagnostic channels and combine their votes.
+
+For the M3 example without runtime error text, the adapter counts at least two entries in the finding's feature object. The two structural terms give
+\begin{equation}
+\operatorname{sigmoid}\left(\log(0.30/0.70)+0.60+0.55\right)\approx0.575.
+\end{equation}
+The value is a \emph{heuristic confidence score}. The weights have not been fitted or calibrated against human-labelled outcomes. Moreover, feature entries include metadata such as a line number or target name, so counting them does not count independent observations. Calibration remains future work.
+
+\section{Feedback, retrieval, and learner records}
+\label{sec:pedagogy}
+For a diagnosed chat turn, the service reads prior events for the same user and category. It passes the count plus one and a history indicator to the base policy, then attempts to record the current event. Reading first keeps the current event out of its own history count. Concurrent or duplicate requests would need additional checks beyond this ordering.
+
+With no prior event, the policy selects \code{progressive_hint}. The second recorded detection selects \code{debugging_guidance}; at three or more it selects \code{concept_explanation}. That last branch returns to hint level 1, so repeated detections do not automatically produce more code or a fuller solution. Figure~\ref{fig:teaching} shows the selected strategies and levels.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=8mm and 8mm]
+\node[box,text width=48mm] (history) {Diagnosed chat turn\\read prior same-category events};
+\node[box,text width=48mm,below=of history] (n) {Current count = prior count + 1};
+\node[box,text width=37mm] (first) at ($(n.south)+(-50mm,-25mm)$) {First detection\\progressive hint\\level 1};
+\node[box,text width=37mm] (second) at ($(n.south)+(0,-25mm)$) {Second detection\\debugging guidance\\level 2};
+\node[box,text width=37mm] (third) at ($(n.south)+(50mm,-25mm)$) {Third or later\\concept explanation\\level 1};
+\node[box,text width=48mm,below=13mm of second] (record) {Attempt event write\\then construct guided response};
+\draw[flow] (history)--(n);
+\draw[flow] (n)--(first);
+\draw[flow] (n)--(second);
+\draw[flow] (n)--(third);
+\draw[flow] (first)--(record);
+\draw[flow] (second)--(record);
+\draw[flow] (third)--(record);
+\end{tikzpicture}
+\caption{Base policy for diagnosed chat turns. Counts refer to recorded events, not all submissions or verified persistent misconceptions. An optional steering configuration can override the base decision.}
+\label{fig:teaching}
+\end{figure}
+
+The helper also has no-category branches, but chat calls it only in the diagnosed branch, so they do not describe no-match behaviour.
+
+Exercise hints use a separate requested level from 1 to 5: concept, direction, location, partial code, and complete reference. The level is independent of the chat detection count. Level 5 permits a full answer, and generated text at lower levels may still fail to follow the instructions. The interface therefore cannot guarantee that solutions are withheld.
+
+Optional pedagogical steering replaces the base decision with a graph-based choice and further prompt constraints. It is disabled by default, and the present evaluation does not compare its effectiveness with the base policy. Metadata records the selected strategy, level, and diagnosis evidence for either decision path; checking the resulting text remains a separate task.
+
+The corpus contains project-authored Python material. Retrieval uses keyword search and Chroma vector search with external embeddings; the vector service is queried when available, with keyword search as an additional route and fallback. The generator receives selected fragments with other prompt information.
+
+The default merge places vector results before keyword results and removes duplicate chunk IDs, so the top-$k$ list may contain only vector results. A separate option weights fragments found by both; reranking and compression have their own controls. With hybrid weights off, hybrid top-five matched vector, leaving no evidence of fusion benefit, and the service lacks a validated abstention rule for out-of-corpus questions.
+
+Misconception events and exercise activity use different routes. Diagnosed chat records category, evidence, score, and a code excerpt; exercises record outcomes and hint activity and update concepts. An exercise failure is not automatically the same event counted by chat. A failed result increments an unresolved concept weakness (severity capped at five), and a success can mark it resolved; these rules maintain records, not validated measures of ability.
+
+The base recommendation prioritises an unresolved weakness, otherwise the next learning-path item and prerequisites. Optional content recommendation compares concept labels and penalises difficulty mismatch, considering up to 100 exercises and five weakness concepts. Optional time decay lowers the weight of older weaknesses without observing improvement; none of these rules is a trained knowledge-tracing model.
+
+\section{Implementation and configuration}
+\label{sec:implementation}
+Exercises use a common runner; AST parsing does not execute code. When production isolation requires Docker and it is unavailable, the runner returns unavailable or unjudged; a development subprocess is not a substitute. The event writer resolves a catalogue code such as M3 to a database row before the foreign key and logs write failures, which would otherwise leave history counts unchanged; failure and concurrency tests are still needed.
+
+Table~\ref{tab:flags} lists the code defaults and the experimental use of selected options. A deployed environment can override these defaults. The offline experiments call component functions directly, so they do not check all settings in a live application.
+
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Selected configuration boundaries. ``Off'' describes the inspected code default.}
+\label{tab:flags}
+\begin{tabularx}{\textwidth}{p{50mm}lY}
+\toprule
+Flag & Default & Treatment in this thesis\\
+\midrule
+\code{ENABLE_AST_DIAGNOSIS} & Off & Structural component called explicitly in offline evaluation\\
+\code{ENABLE_PEDAGOGY_STEERING} & Off & Optional path; base policy described separately\\
+\code{ENABLE_HYBRID_WEIGHTS} & Off & Off in stored hybrid comparison\\
+\code{ENABLE_MULTI_JUDGE} & Off & Exploratory review evidence only\\
+\code{ENABLE_TIME_DECAY} & Off & Implemented option, no demonstrated learning benefit\\
+\code{ENABLE_CONTENT_RECOMMEND} & Off & Functional mechanism, no ranking-effectiveness result\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Chapter~\ref{ch:experiments} evaluates diagnosis and retrieval and examines integration evidence.
